@@ -1,6 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
+import {toast} from "react-toastify";
 
 const Dashboard = () => {
+  const [email, setEmail] = useState("");
+
+  const handleApply = async () => {
+    if (!email) return toast.error("Please enter your email");
+
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/api/admin/send-invite",
+        {
+          email,
+        }
+      );
+      toast.success(res.data.message || "Invitation Sent!");
+      setEmail("");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to send invite");
+    }
+  };
+
   return (
     <div className="bg-gray-100">
       <header>
@@ -156,13 +177,16 @@ const Dashboard = () => {
           <form className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
             <input
               type="email"
+              value={email}
               placeholder="Your email address"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              onChange={(e) => setEmail(e.target.value)}
             />
             <button
               type="submit"
               className="bg-blue-500 text-white px-6 py-1.5 rounded-lg hover:bg-blue-700 transition-all w-full sm:w-auto"
+              onClick={handleApply}
             >
               Apply Now
             </button>

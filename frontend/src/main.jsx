@@ -9,6 +9,7 @@ import Dashboard from "./Dashboard.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminDashboard from "./AdminDashboard.jsx";
+import AdminRegister from "./AdminRegister.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -17,9 +18,10 @@ createRoot(document.getElementById("root")).render(
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Dashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin-register" element={<AdminRegister />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Routes>
+      <ToastContainer position="top-center" autoClose={3000} />
     </BrowserRouter>
-    <ToastContainer position="top-center" autoClose={3000} />
   </StrictMode>
 );

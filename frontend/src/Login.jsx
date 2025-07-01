@@ -24,17 +24,19 @@ const Login = () => {
         formData
       );
 
-      toast.success(res.data.message); 
+      toast.success(res.data.message);
 
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      setTimeout(() => {
+      if (res.data.user.login_type === "admin") {
+        window.location.href = "/admin-dashboard";
+      } else {
         window.location.href = "/";
-      }, 1500);
+      }
     } catch (err) {
       toast.error(
         err?.response?.data?.message || "Login failed. Please try again."
-      ); 
+      );
     }
   };
 
