@@ -6,10 +6,10 @@ import Signup from "./Signup.jsx";
 import Login from "./Login.jsx";
 import App from "./App.jsx";
 import Dashboard from "./Dashboard.jsx";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import AdminDashboard from "./AdminDashboard.jsx";
 import AdminRegister from "./AdminRegister.jsx";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

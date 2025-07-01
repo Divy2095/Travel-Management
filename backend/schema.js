@@ -56,8 +56,24 @@ CREATE TABLE IF NOT EXISTS locations (
   FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 )`;
 
+const trips = `
+CREATE TABLE IF NOT EXISTS trips (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  date DATE NOT NULL,
+  image VARCHAR(255) NOT NULL,
+  location_id INT,
+  price DECIMAL(10,2),
+  duration VARCHAR(50),
+  max_participants INT DEFAULT 10,
+  status ENUM('active', 'inactive', 'completed') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
+)`;
 
-const tables = [users, vehicles, cities, locations, drivers];
+const tables = [users, vehicles, cities, locations, drivers, trips];
 
 tables.forEach((query, index) => {
   db.query(query, (err) => {
