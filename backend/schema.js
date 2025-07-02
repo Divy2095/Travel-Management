@@ -25,15 +25,18 @@ CREATE TABLE IF NOT EXISTS vehicles (
 const drivers = `
 CREATE TABLE IF NOT EXISTS drivers (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  name VARCHAR(100),
-  phone VARCHAR(15),
-  license_number VARCHAR(50) UNIQUE,
-  vehicle_id INT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100),
+  phone VARCHAR(15) NOT NULL,
+  license_number VARCHAR(50) NOT NULL,
+  license_expiry DATE NOT NULL,
+  address TEXT,
   status ENUM('active', 'inactive') DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+  assigned_vehicle_id INT,
+  joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  profile_photo TEXT,
+  rating DECIMAL(2,1),
+  FOREIGN KEY (assigned_vehicle_id) REFERENCES vehicles(id)
 )`;
 
 const cities = `
