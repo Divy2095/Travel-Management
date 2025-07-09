@@ -87,18 +87,6 @@ const Signup = () => {
               onChange={handleChange}
             />
 
-            {/* Optional select */}
-            {/* <select
-            name="login_type"
-            value={formData.login_type}
-            onChange={handleChange}
-            className="w-full mb-4 p-2 border rounded pr-10"
-          >
-            <option value="customer">User</option>
-            <option value="admin">Admin</option>
-            <option value="driver">Driver</option>
-          </select> */}
-
             <input
               type="submit"
               value="START TRAVELLING"

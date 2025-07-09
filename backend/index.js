@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("./database/db");
-const mysql = require("mysql2");
+// const mysql = require("mysql2");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
