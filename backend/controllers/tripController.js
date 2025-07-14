@@ -42,7 +42,7 @@ exports.getAllTrips = async (req, res) => {
 };
 
 // Add new trip
-exports.addTrip = async (res, res) => {
+exports.addTrip = async (req, res) => {
   try {
     const {
       title,
@@ -70,12 +70,11 @@ exports.addTrip = async (res, res) => {
 
     // Insert trip
     const insertTripQuery = `
-    INSERT INTO trips (
-        title, description, date, location_id, price, 
-        duration, max_participants, status, imagePath
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+                            INSERT INTO trips (
+                            title, description, date, location_id, price, 
+                            duration, max_participants, status, imagePath,
+                            entry_by, entry_date )
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
 
     const tripParams = [
       title,
@@ -87,6 +86,7 @@ exports.addTrip = async (res, res) => {
       max_participants || 10,
       status || "active",
       imagePath,
+      req.body.entry_by, // must come from frontend
     ];
 
     db.query(insertTripQuery, tripParams, (tripErr, tripResult) => {
@@ -182,11 +182,10 @@ exports.updateTrip = async (req, res) => {
 
       // Update trip
       const updateTripQuery = `
-        UPDATE trips
-        SET title = ?, description = ?, date = ?, location_id = ?,
-            price = ?, duration = ?, max_participants = ?, status = ?, imagePath = ?
-        WHERE id = ?
-        `;
+                              UPDATE trips
+                              SET title = ?, description = ?, date = ?, location_id = ?,
+                              price = ?, duration = ?, max_participants = ?, status = ?, imagePath = ?,
+                              update_by = ?, update_date = NOW() WHERE id = ?`;
 
       const tripParams = [
         title,
@@ -198,6 +197,7 @@ exports.updateTrip = async (req, res) => {
         max_participants || 10,
         status || "active",
         imagePath,
+        req.body.update_by, // from frontend
         tripId,
       ];
 
@@ -235,7 +235,7 @@ exports.deleteTrip = async (req, res) => {
     // check if trip exists and get image path
     const checkTripQuery = "SELECT imagePath FROM trips WHERE id = ?";
     db.query(checkTripQuery, [tripId], (checkErr, checkResults) => {
-      if (checkE) {
+      if (checkErr) {
         return res.status(500).json({
           success: false,
           message: "Database error while checking.",
@@ -266,7 +266,7 @@ exports.deleteTrip = async (req, res) => {
 
         // Delete image file if exists
         if (imagePath) {
-          const imageFilePath = path.json(__dirname, "..", imagePath);
+          const imageFilePath = path.join(__dirname, "..", imagePath);
           if (fs.existsSync(imageFilePath)) {
             fs.unlinkSync(imageFilePath);
           }
@@ -373,6 +373,5 @@ exports.getTripByStatus = async (req, res) => {
     });
   }
 };
-
 
 // Get Upcoming Trips

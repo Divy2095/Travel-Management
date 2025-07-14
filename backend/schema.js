@@ -1,5 +1,12 @@
 const db = require("./database/db");
 
+// db.query("DROP TABLE IF EXISTS users");
+// db.query("DROP TABLE IF EXISTS drivers");
+// db.query("DROP TABLE IF EXISTS vehicles");
+// db.query("DROP TABLE IF EXISTS trips");
+// db.query("DROP TABLE IF EXISTS locations");
+// db.query("DROP TABLE IF EXISTS cities");
+
 const users = `
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -7,8 +14,12 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     login_type ENUM('admin', 'driver', 'customer') NOT NULL,
+    image VARCHAR(500), -- ✅ Added image column
     status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    entry_by VARCHAR(100),
+    update_by VARCHAR(100),
+    entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
 const vehicles = `
@@ -19,7 +30,10 @@ CREATE TABLE IF NOT EXISTS vehicles (
   model VARCHAR(50),
   capacity INT,
   status ENUM('available', 'in_use', 'maintenance') DEFAULT 'available',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
 const drivers = `
@@ -36,6 +50,10 @@ CREATE TABLE IF NOT EXISTS drivers (
   joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   profile_photo TEXT,
   rating DECIMAL(2,1),
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (assigned_vehicle_id) REFERENCES vehicles(id)
 )`;
 
@@ -45,7 +63,10 @@ CREATE TABLE IF NOT EXISTS cities (
   name VARCHAR(100) UNIQUE NOT NULL,
   state VARCHAR(100),
   country VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
 const locations = `
@@ -55,7 +76,10 @@ CREATE TABLE IF NOT EXISTS locations (
   address TEXT,
   pincode VARCHAR(10),
   city_id INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 )`;
 
@@ -71,8 +95,10 @@ CREATE TABLE IF NOT EXISTS trips (
   duration VARCHAR(50),
   max_participants INT DEFAULT 10,
   status ENUM('active', 'inactive', 'completed') DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
 )`;
 

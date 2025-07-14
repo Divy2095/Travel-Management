@@ -1,49 +1,208 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import Goa from "./assets/Goa.jpeg";
+import Photo2 from "./assets/Photo2.jpeg";
+import Photo3 from "./assets/Photo3.jpeg";
+import Photo4 from "./assets/Photo4.jpeg";
+import Photo5 from "./assets/Photo5.jpeg";
+import Photo6 from "./assets/Photo6.jpeg";
 
 const Dashboard = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  const handleApply = async () => {
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        console.log("User loaded from localStorage:", parsedUser);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
+
+  const handleApply = async (e) => {
+    e.preventDefault();
+
     if (!email) return toast.error("Please enter your email");
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address");
+    }
+
+    setLoading(true);
+
     try {
+      console.log("Sending invite to:", email);
+
       const res = await axios.post(
         "http://localhost:3000/api/admin/send-invite",
+        { email },
         {
-          email,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
         }
       );
+
+      console.log("Response:", res.data);
       toast.success(res.data.message || "Invitation Sent!");
       setEmail("");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to send invite");
+      console.error("Error details:", error);
+
+      if (error.response) {
+        toast.error(error.response.data.message || "Failed to send invite");
+      } else if (error.request) {
+        toast.error("No response from server. Check if backend is running.");
+      } else {
+        toast.error("Failed to send request");
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    toast.success("Logged out successfully!");
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  // Fixed UserAvatar component
+  const UserAvatar = ({ user }) => {
+    const [imageError, setImageError] = useState(false);
+
+    // Generate fallback avatar URL
+    const fallbackAvatar = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+      user.name || "User"
+    )}&radius=50&backgroundColor=3b82f6&color=ffffff`;
+
+    const handleImageError = () => {
+      setImageError(true);
+    };
+
+    return (
+      <div className="flex items-center space-x-3">
+        <img
+          src={imageError ? fallbackAvatar : user.image || fallbackAvatar}
+          alt={user.name || "User"}
+          className="w-8 h-8 rounded-full border-2 border-gray-300"
+          onError={handleImageError}
+        />
+        <span className="font-medium text-gray-700">{user.name}</span>
+      </div>
+    );
   };
 
   return (
     <div className="bg-gray-100">
       <header>
-        <ul className="flex gap-8 justify-center p-3">
+        <ul className="flex gap-8 justify-center items-center p-3">
           <li></li>
           <li>
-            <a href="">Destinations</a>
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Destinations
+            </a>
           </li>
           <li>
-            <a href="">Hotels</a>
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Hotels
+            </a>
           </li>
           <li>
-            <a href="">Booking</a>
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Booking
+            </a>
           </li>
           <li>
-            <button>Log in</button>
+            {user ? (
+              // Show user avatar and name with dropdown
+              <div className="relative group">
+                <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
+                  <UserAvatar user={user} />
+                  <svg
+                    className="w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <div className="py-2">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    </div>
+                    <a
+                      href="#"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Profile
+                    </a>
+                    <a
+                      href="#"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      My Bookings
+                    </a>
+                    <a
+                      href="#"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Settings
+                    </a>
+                    <div className="border-t border-gray-100">
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Show login button with proper click handler
+              <button
+                onClick={handleLogin}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Log in
+              </button>
+            )}
           </li>
         </ul>
       </header>
 
       <main className="container mx-auto px-6 py-2">
-        {/* Hero Section with Grid Layout */}
+        {/* Hero Section */}
         <section className="grid lg:grid-cols-2 gap-12 items-center min-h-screen">
           {/* Text Content */}
           <div className="text-center lg:text-left">
@@ -65,16 +224,15 @@ const Dashboard = () => {
           </div>
 
           {/* Images Grid */}
-          {/* Collage Grid - only visible from md and up */}
           <div className="hidden md:grid grid-cols-3 gap-6 relative h-auto">
             <div className="flex flex-col gap-6">
               <img
-                src="https://via.placeholder.com/300x400/FFB84D/FFFFFF?text=Image+1"
+                src={Goa}
                 alt="Destination 1"
                 className="rounded-2xl shadow-lg w-full h-64 object-cover transform hover:rotate-3 transition-transform duration-300"
               />
               <img
-                src="https://via.placeholder.com/300x400/4ECDC4/FFFFFF?text=Image+3"
+                src={Photo2}
                 alt="Destination 3"
                 className="rounded-2xl shadow-lg w-full h-64 object-cover transform hover:-rotate-3 transition-transform duration-300"
               />
@@ -82,12 +240,12 @@ const Dashboard = () => {
 
             <div className="flex flex-col gap-6 mt-12">
               <img
-                src="https://via.placeholder.com/300x400/FF6B6B/FFFFFF?text=Image+2"
+                src={Photo3}
                 alt="Destination 2"
                 className="rounded-2xl shadow-lg w-full h-64 object-cover transform hover:-rotate-6 transition-transform duration-300"
               />
               <img
-                src="https://via.placeholder.com/300x400/95E1D3/FFFFFF?text=Image+4"
+                src={Photo4}
                 alt="Destination 4"
                 className="rounded-2xl shadow-lg w-full h-64 object-cover transform hover:rotate-6 transition-transform duration-300"
               />
@@ -95,12 +253,12 @@ const Dashboard = () => {
 
             <div className="flex flex-col gap-6">
               <img
-                src="https://via.placeholder.com/300x400/FFB84D/FFFFFF?text=Image+5"
+                src={Photo5}
                 alt="Destination 5"
                 className="rounded-2xl shadow-lg w-full h-64 object-cover transform hover:rotate-3 transition-transform duration-300"
               />
               <img
-                src="https://via.placeholder.com/300x400/4ECDC4/FFFFFF?text=Image+6"
+                src={Photo6}
                 alt="Destination 6"
                 className="rounded-2xl shadow-lg w-full h-64 object-cover transform hover:-rotate-3 transition-transform duration-300"
               />
@@ -108,6 +266,7 @@ const Dashboard = () => {
           </div>
         </section>
 
+        {/* Services Section */}
         <div className="my-16">
           <h1 className="text-center font-semibold text-2xl mb-8">
             We Offer Best Services
@@ -129,6 +288,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Steps Section */}
         <div className="mt-20 grid md:grid-cols-2 gap-12 items-center">
           <div className="px-4">
             <p className="text-blue-500 text-xl font-medium mb-2">
@@ -145,7 +305,6 @@ const Dashboard = () => {
           </div>
 
           <div className="w-full flex justify-center">
-            {/* Replace with an actual image */}
             <img
               src="https://via.placeholder.com/400x300"
               alt="Trip Steps"
@@ -154,6 +313,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Testimonials Section */}
         <div className="mt-24 text-center">
           <h1 className="text-3xl sm:text-4xl font-semibold mb-4">
             What People Say About Us.
@@ -164,6 +324,7 @@ const Dashboard = () => {
         </div>
       </main>
 
+      {/* Footer */}
       <footer className="bg-blue-100 py-12 px-6 mt-24">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
@@ -174,21 +335,29 @@ const Dashboard = () => {
             vacations. Enter your email to get started!
           </p>
 
-          <form className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+          <form
+            onSubmit={handleApply}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto"
+          >
             <input
               type="email"
               value={email}
               placeholder="Your email address"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              disabled={loading}
               onChange={(e) => setEmail(e.target.value)}
             />
             <button
               type="submit"
-              className="bg-blue-500 text-white px-6 py-1.5 rounded-lg hover:bg-blue-700 transition-all w-full sm:w-auto"
-              onClick={handleApply}
+              disabled={loading}
+              className={`${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-700"
+              } text-white px-6 py-3 rounded-lg transition-all w-full sm:w-auto`}
             >
-              Apply Now
+              {loading ? "Sending..." : "Apply Now"}
             </button>
           </form>
 

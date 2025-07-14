@@ -4,6 +4,7 @@ const db = require("./database/db");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
+const vehicleRoutes = require("./routes/vehicles");
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/vehicles", vehicleRoutes);
 
 app.get("/", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {

@@ -98,13 +98,11 @@ exports.addDriver = async (req, res) => {
         }
 
         // Insert driver
-        const insertDriverQuery = `
-        INSERT INTO drivers (
-          name, email, phone, license_number, license_expiry, 
-          address, status, assigned_vehicle_id, rating
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+        const insertDriverQuery = `INSERT INTO drivers (
+                                  name, email, phone, license_number, license_expiry, 
+                                  address, status, assigned_vehicle_id, rating, entry_by, entry_date ) 
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW());`;
+
         const driverParams = [
           name,
           email || null,
@@ -115,6 +113,7 @@ exports.addDriver = async (req, res) => {
           status || "active",
           assigned_vehicle_id || null,
           rating || null,
+          req.body.entry_by, // pass from frontend
         ];
 
         db.query(insertDriverQuery, driverParams, (driverErr, driverResult) => {
@@ -159,7 +158,7 @@ exports.addDriver = async (req, res) => {
 // Update driver
 exports.updateDriver = async (req, res) => {
   try {
-    const driverId = req.params.id; // ✅ FIXED: Changed from req.driverParams.id
+    const driverId = req.params.id;
     const {
       name,
       email,
@@ -198,13 +197,11 @@ exports.updateDriver = async (req, res) => {
       }
 
       // Update driver
-      const updateDriverQuery = `
-        UPDATE drivers
-        SET name = ?, email = ?, phone = ?, license_number = ?,
-            license_expiry = ?, address = ?, status = ?, 
-            assigned_vehicle_id = ?, rating = ?
-        WHERE id = ?
-      `;
+      const updateDriverQuery = `UPDATE drivers
+                                SET name = ?, email = ?, phone = ?, license_number = ?,
+                                license_expiry = ?, address = ?, status = ?, 
+                                assigned_vehicle_id = ?, rating = ?, update_by = ?, update_date = NOW()
+                                WHERE id = ?`;
 
       const driverParams = [
         name,
@@ -216,6 +213,7 @@ exports.updateDriver = async (req, res) => {
         status || "active",
         assigned_vehicle_id || null,
         rating || null,
+        req.body.update_by, // pass from frontend
         driverId,
       ];
 

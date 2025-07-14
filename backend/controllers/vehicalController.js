@@ -65,14 +65,16 @@ exports.addVehicle = async (req, res) => {
       }
 
       // Insert new Vehicle
-      const insertQuery = `INSERT INTO vehicles (vehicle_number, type, model, capacity, status)
-                                 VALUES (?, ?, ?, ?, ?)`;
+      const insertQuery = `INSERT INTO vehicles 
+                          (vehicle_number, type, model, capacity, status, entry_by, entry_date)
+                          VALUES (?, ?, ?, ?, ?, ?, NOW())`;
       const params = [
         vehicle_number,
         type,
         model,
         capacity || null,
         status || "available",
+        req.body.entry_by, // This must be passed from frontend
       ];
 
       db.query(insertQuery, params, (err, results) => {
@@ -123,8 +125,8 @@ exports.updateVehicle = async (req, res) => {
     }
 
     const query = `UPDATE vehicles
-                       SET vehicle_number=?, type=?, model=?, capacity=?, status=?
-                       WHERE id=?`;
+                  SET vehicle_number=?, type=?, model=?, capacity=?, status=?, update_by=?, update_date=NOW()
+                  WHERE id=?`;
 
     const params = [
       vehicle_number,
@@ -132,12 +134,13 @@ exports.updateVehicle = async (req, res) => {
       model,
       capacity || null,
       status || "available",
+      req.body.update_by, // Pass this from frontend
       vehicleId,
     ];
 
     db.query(query, params, (err, result) => {
       if (err) {
-        console.err("Database error: ", err);
+        console.error("Database error: ", err);
         return res.status(500).json({
           success: false,
           message: "Failed to update vehicle.",
