@@ -34,6 +34,14 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const [drivers, setDrivers] = useState([]);
+  const [driverStats, setDriverStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+  });
+  const [loadingDrivers, setLoadingDrivers] = useState(true);
+
   // fetch VehicleData
   const fetchVehicles = async () => {
     try {
@@ -70,9 +78,45 @@ const AdminDashboard = () => {
     fetchVehicles();
   };
 
+  // Handle new Driver add
+  const handleDriverAdded = () => {
+    fetchDrivers();
+  };
+
   useEffect(() => {
     fetchVehicles();
+    fetchDrivers();
   }, []);
+
+  // Driver Functions
+  const fetchDrivers = async () => {
+    try {
+      setLoadingDrivers(true);
+      const response = await fetch("http://localhost:3000/api/drivers");
+      const result = await response.json();
+
+      if (result.success) {
+        setDrivers(result.data);
+
+        const activeCount = result.data.filter(
+          (d) => d.status === "active"
+        ).length;
+        const inactiveCount = result.data.filter(
+          (d) => d.status === "inactive"
+        ).length;
+
+        setDriverStats({
+          total: result.data.length,
+          active: activeCount,
+          inactive: inactiveCount,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+    } finally {
+      setLoadingDrivers(false);
+    }
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -185,6 +229,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* NEW DRIVER MANAGEMENT SECTION */}
+        {/* NEW DRIVER MANAGEMENT SECTION */}
         <div className="mt-12">
           {/* Driver Section Title */}
           <div className="mb-8">
@@ -199,7 +244,7 @@ const AdminDashboard = () => {
           {/* Driver Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {/* Add New Driver Component */}
-            <AddNewDriver />
+            <AddNewDriver onDriverAdded={handleDriverAdded} />
 
             {/* Driver Stats Cards */}
             <div className="bg-white rounded-xl p-6 shadow-md">
@@ -211,7 +256,9 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <p className="text-gray-600 text-sm">Active Drivers</p>
-                  <p className="text-2xl font-bold text-gray-800">12</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loadingDrivers ? "..." : driverStats.active}
+                  </p>
                 </div>
               </div>
             </div>
@@ -224,8 +271,10 @@ const AdminDashboard = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="text-gray-600 text-sm">Available</p>
-                  <p className="text-2xl font-bold text-gray-800">8</p>
+                  <p className="text-gray-600 text-sm">Inactive</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loadingDrivers ? "..." : driverStats.inactive}
+                  </p>
                 </div>
               </div>
             </div>
@@ -238,8 +287,10 @@ const AdminDashboard = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="text-gray-600 text-sm">On Trip</p>
-                  <p className="text-2xl font-bold text-gray-800">4</p>
+                  <p className="text-gray-600 text-sm">Total Drivers</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loadingDrivers ? "..." : driverStats.total}
+                  </p>
                 </div>
               </div>
             </div>
@@ -253,9 +304,49 @@ const AdminDashboard = () => {
               </h3>
             </div>
             <div className="p-6">
-              <p className="text-gray-500 text-center py-8">
-                No drivers registered yet. Add your first driver!
-              </p>
+              {loadingDrivers ? (
+                <p className="text-center">Loading...</p>
+              ) : drivers.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No drivers registered yet. Add your first driver!
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white">
+                    <thead>
+                      <tr className="w-full h-16 border-b border-gray-200">
+                        <th className="text-left pl-4">Name</th>
+                        <th className="text-left">Phone</th>
+                        <th className="text-left">License #</th>
+                        <th className="text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {drivers.slice(0, 5).map((driver) => (
+                        <tr
+                          key={driver.id}
+                          className="h-14 border-b hover:bg-gray-50"
+                        >
+                          <td className="pl-4">{driver.name}</td>
+                          <td>{driver.phone}</td>
+                          <td>{driver.license_number}</td>
+                          <td>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                driver.status === "active"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-200 text-gray-700"
+                              }`}
+                            >
+                              {driver.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
