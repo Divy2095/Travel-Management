@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const vehicleRoutes = require("./routes/vehicles");
 const driverRoutes = require("./routes/drivers");
+const tripRoutes = require("./routes/trips");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/drivers", driverRoutes);
+app.use("/api/trips", tripRoutes);
 
 app.get("/", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {

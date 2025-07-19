@@ -347,7 +347,6 @@ exports.getDriverById = async (req, res) => {
     `;
 
     db.query(query, [driverId], (err, results) => {
-      // ✅ FIXED: Proper error handling
       if (err) {
         console.error("Database error: ", err);
         return res.status(500).json({
@@ -366,7 +365,7 @@ exports.getDriverById = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Driver fetched successfully.", // ✅ FIXED: Spelling
+        message: "Driver fetched successfully.",
         data: results[0],
       });
     });
