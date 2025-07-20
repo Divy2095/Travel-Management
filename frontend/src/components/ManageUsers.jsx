@@ -53,14 +53,16 @@ const ManageUsers = () => {
       {/* Manage Users Card */}
       <div
         onClick={() => setShowModal(true)}
-        className="bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl p-6 cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg hover:shadow-xl"
+        className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-8 shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl relative overflow-hidden group"
       >
-        <div className="flex flex-col items-center text-white">
-          <div className="bg-white bg-opacity-20 rounded-full p-4 mb-4">
-            <FaUsers className="text-4xl" />
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-purple-400 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-purple-400 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+        <div className="relative flex flex-col items-center">
+          <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm mb-4 group-hover:bg-white/30 transition-colors">
+            <FaUsers className="text-white text-3xl" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">Manage Users</h3>
-          <p className="text-center text-purple-100">
+          <h3 className="text-xl font-semibold text-white mb-2">Manage Users</h3>
+          <p className="text-purple-100 text-center">
             View and manage customer accounts
           </p>
         </div>

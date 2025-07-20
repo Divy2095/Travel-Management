@@ -174,9 +174,7 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-xl p-6 shadow-md">
             <div className="flex items-center">
               <div className="bg-blue-100 p-3 rounded-full mr-4">
-                <span className="text-blue-600 text-xl">
-                  <SlCalender />
-                </span>
+                <SlCalender className="text-blue-600 text-2xl" />
               </div>
               <div>
                 <p className="text-gray-600 text-sm">Active Trips</p>
@@ -187,10 +185,8 @@ const AdminDashboard = () => {
 
           <div className="bg-white rounded-xl p-6 shadow-md">
             <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-full mr-4">
-                <span className="text-green-600 text-xl">
-                  <IoPeople />
-                </span>
+              <div className="bg-emerald-100 p-3 rounded-full mr-4">
+                <IoPeople className="text-emerald-600 text-2xl" />
               </div>
               <div>
                 <p className="text-gray-600 text-sm">Total Bookings</p>
@@ -201,14 +197,12 @@ const AdminDashboard = () => {
 
           <div className="bg-white rounded-xl p-6 shadow-md">
             <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-full mr-4">
-                <span className="text-purple-600 text-xl">
-                  <PiCurrencyInrBold />
-                </span>
+              <div className="bg-violet-100 p-3 rounded-full mr-4">
+                <PiCurrencyInrBold className="text-violet-600 text-2xl" />
               </div>
               <div>
                 <p className="text-gray-600 text-sm">Revenue</p>
-                <p className="text-2xl font-bold text-gray-800">12,450</p>
+                <p className="text-2xl font-bold text-gray-800">₹12,450</p>
               </div>
             </div>
           </div>

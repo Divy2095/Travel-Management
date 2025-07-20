@@ -81,16 +81,20 @@ const AddNewDriver = ({ onDriverAdded }) => {
   return (
     <>
       <div
-        className="bg-white rounded-xl p-6 shadow-md border-2 border-dashed border-gray-300 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setIsModalOpen(true)}
+        className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-8 shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl relative overflow-hidden group"
       >
-        <div className="bg-sky-100 p-3 rounded-full mb-4">
-          <TiPlus className="text-sky-600 text-2xl" />
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-400 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-emerald-400 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+        <div className="relative flex flex-col items-center">
+          <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm mb-4 group-hover:bg-white/30 transition-colors">
+            <TiPlus className="text-white text-3xl" />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">Add New Driver</h3>
+          <p className="text-emerald-100 text-center">
+            Register a new driver in the system
+          </p>
         </div>
-        <h3 className="text-lg font-semibold text-gray-800">Add New Driver</h3>
-        <p className="text-sm text-gray-500 text-center mt-1">
-          Register a new driver in the system
-        </p>
       </div>
 
       {isModalOpen && (
