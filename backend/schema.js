@@ -102,7 +102,30 @@ CREATE TABLE IF NOT EXISTS trips (
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
 )`;
 
-const tables = [users, vehicles, cities, locations, drivers, trips];
+const bookings = `
+CREATE TABLE IF NOT EXISTS bookings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  trip_id INT NOT NULL,
+  user_id INT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  emergency_contact VARCHAR(255),
+  emergency_phone VARCHAR(20),
+  participants INT NOT NULL DEFAULT 1,
+  special_requests TEXT,
+  total_amount DECIMAL(10, 2) NOT NULL,
+  booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+)`;
+
+const tables = [users, vehicles, cities, locations, drivers, trips, bookings];
 
 tables.forEach((query, index) => {
   db.query(query, (err) => {

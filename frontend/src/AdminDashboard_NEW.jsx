@@ -61,102 +61,37 @@ const AdminDashboard = () => {
 
   // Fetch all data on component mount
   useEffect(() => {
-    console.log("🚀 AdminDashboard mounted, fetching data...");
     fetchAllData();
   }, []);
-
-  // Also add a manual refresh button for debugging
-  const handleRefresh = () => {
-    console.log("🔄 Manual refresh triggered");
-    fetchAllData();
-  };
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Fetching admin dashboard data...");
+      const [tripsRes, driversRes, vehiclesRes, usersRes, reviewsRes] =
+        await Promise.all([
+          axios.get(`${API_BASE_URL}/trips`),
+          axios.get(`${API_BASE_URL}/drivers`),
+          axios.get(`${API_BASE_URL}/vehicles`),
+          axios.get(`${API_BASE_URL}/auth/users`),
+          axios.get(`${API_BASE_URL}/reviews`),
+        ]);
 
-      // Fetch trips
-      const tripsRes = await axios.get(`${API_BASE_URL}/trips`).catch((err) => {
-        console.error(
-          "❌ Error fetching trips:",
-          err.response?.data || err.message
-        );
-        return { data: [] };
-      });
-
-      // Fetch drivers
-      const driversRes = await axios
-        .get(`${API_BASE_URL}/drivers`)
-        .catch((err) => {
-          console.error(
-            "❌ Error fetching drivers:",
-            err.response?.data || err.message
-          );
-          return { data: [] };
-        });
-
-      // Fetch vehicles
-      const vehiclesRes = await axios
-        .get(`${API_BASE_URL}/vehicles`)
-        .catch((err) => {
-          console.error(
-            "❌ Error fetching vehicles:",
-            err.response?.data || err.message
-          );
-          return { data: [] };
-        });
-
-      // Fetch users
-      const usersRes = await axios
-        .get(`${API_BASE_URL}/auth/users`)
-        .catch((err) => {
-          console.error(
-            "❌ Error fetching users:",
-            err.response?.data || err.message
-          );
-          return { data: [] };
-        });
-
-      console.log("🔍 Raw API Responses:", {
-        trips: tripsRes.data,
-        drivers: driversRes.data,
-        vehicles: vehiclesRes.data,
-        users: usersRes.data,
-      });
-
-      // Handle different response structures
-      const tripsData = tripsRes.data?.data || tripsRes.data || [];
-      const driversData = driversRes.data?.data || driversRes.data || [];
-      const vehiclesData = vehiclesRes.data?.data || vehiclesRes.data || [];
-      const usersData = usersRes.data?.data || usersRes.data || [];
-
-      console.log("✅ Processed Data:", {
-        trips: tripsData.length,
-        drivers: driversData.length,
-        vehicles: vehiclesData.length,
-        users: usersData.length,
-      });
-
-      setTrips(tripsData);
-      setDrivers(driversData);
-      setVehicles(vehiclesData);
-      setUsers(usersData);
-      setReviews([]); // No reviews API yet
+      setTrips(tripsRes.data);
+      setDrivers(driversRes.data);
+      setVehicles(vehiclesRes.data);
+      setUsers(usersRes.data);
+      setReviews(reviewsRes.data);
 
       // Update stats
-      const newStats = {
-        totalTrips: tripsData.length,
-        totalDrivers: driversData.length,
-        totalVehicles: vehiclesData.length,
-        totalUsers: usersData.length,
-        totalReviews: 0, // No reviews yet
-      };
-
-      setStats(newStats);
-      console.log("📊 Updated stats:", newStats);
+      setStats({
+        totalTrips: tripsRes.data.length,
+        totalDrivers: driversRes.data.length,
+        totalVehicles: vehiclesRes.data.length,
+        totalUsers: usersRes.data.length,
+        totalReviews: reviewsRes.data.length,
+      });
     } catch (error) {
-      console.error("💥 Error fetching data:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -393,27 +328,6 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <AdminHeader onLogout={handleLogout} />
-
-      {/* Debug Section - Remove this in production */}
-      <div className="max-w-7xl mx-auto px-4 mb-4">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-800">
-                <strong>Debug Info:</strong> Stats - Trips: {stats.totalTrips},
-                Drivers: {stats.totalDrivers}, Vehicles: {stats.totalVehicles},
-                Users: {stats.totalUsers}
-              </p>
-            </div>
-            <button
-              onClick={handleRefresh}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Refresh Data
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Tab Navigation */}
       <div className="bg-white shadow-sm border-b border-gray-200 mb-8">

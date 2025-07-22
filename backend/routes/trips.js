@@ -12,6 +12,28 @@ router.use(
   })
 );
 
+// Get all locations (for dropdown)
+router.get("/locations", (req, res) => {
+  const query = `
+    SELECT l.id, l.name, l.address, l.pincode, l.city_id, c.name AS city_name
+    FROM locations l
+    LEFT JOIN cities c ON l.city_id = c.id
+    WHERE c.id IS NOT NULL;
+  `;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching locations:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+    return res.json({
+      success: true,
+      data: results,
+    });
+  });
+});
+
 // Get all trips
 router.get("/", (req, res) => {
   const query = `
@@ -32,25 +54,32 @@ router.get("/", (req, res) => {
   });
 });
 
-// Get all locations (for dropdown)
-router.get("/locations", (req, res) => {
+// Get single trip by ID
+router.get("/:id", (req, res) => {
+  const { id } = req.params;
   const query = `
-    SELECT l.id, l.name, l.address, l.pincode, l.city_id, c.name AS city_name
-    FROM locations l
-    LEFT JOIN cities c ON l.city_id = c.id
-    WHERE c.id IS NOT NULL;
+    SELECT t.*, l.name as location_name 
+    FROM trips t
+    LEFT JOIN locations l ON t.location_id = l.id
+    WHERE t.id = ?
   `;
-  db.query(query, (err, results) => {
+  db.query(query, [id], (err, results) => {
     if (err) {
-      console.error("Error fetching locations:", err);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching trip",
+        error: err.message,
+      });
     }
-    return res.json({
-      success: true,
-      data: results,
-    });
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    res.json({ success: true, data: results[0] });
   });
 });
 

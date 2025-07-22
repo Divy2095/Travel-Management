@@ -7,6 +7,7 @@ import Login from "./Login.jsx";
 import Dashboard from "./Dashboard.jsx";
 import AdminDashboard from "./AdminDashboard.jsx";
 import AdminRegister from "./AdminRegister.jsx";
+import BookingForm from "./BookingForm.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/" element={<Dashboard />} />
         <Route path="/admin-register" element={<AdminRegister />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/booking/:tripId" element={<BookingForm />} />
       </Routes>
       <ToastContainer position="top-center" autoClose={3000} />
     </BrowserRouter>

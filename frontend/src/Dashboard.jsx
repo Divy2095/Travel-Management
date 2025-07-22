@@ -60,6 +60,16 @@ const Dashboard = () => {
     }
   };
 
+  // Handle booking navigation
+  const handleBookTrip = (tripId) => {
+    if (!user) {
+      toast.info("Please login to book a trip");
+      navigate("/login");
+      return;
+    }
+    navigate(`/booking/${tripId}`);
+  };
+
   const handleApply = async (e) => {
     e.preventDefault();
 
@@ -449,6 +459,7 @@ const Dashboard = () => {
                         </div>
 
                         <button
+                          onClick={() => handleBookTrip(trip.id)}
                           className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                             new Date(trip.date) > new Date()
                               ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg"
