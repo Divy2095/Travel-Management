@@ -1,7 +1,7 @@
 const db = require("../database/db");
 const path = require("path");
 const fs = require("fs");
-const { CloudinaryUpload } = require("../utils/Cloudinary");
+const { error } = require("console");
 
 // Get all trips
 exports.getAllTrips = async (req, res) => {
@@ -43,8 +43,7 @@ exports.getAllTrips = async (req, res) => {
 
 // Add new trip
 exports.addTrip = async (req, res) => {
-  let imagePath = null;
-  
+  console.log("hii");
   try {
     const {
       title,
@@ -55,10 +54,8 @@ exports.addTrip = async (req, res) => {
       duration,
       max_participants,
       status,
-      entry_by
     } = req.body;
 
-    // Validate required fields
     if (!title || !description || !date) {
       return res.status(400).json({
         success: false,
@@ -68,30 +65,8 @@ exports.addTrip = async (req, res) => {
 
     let imagePath = null;
     // Handle file upload
-    if (req.files && req.files.image) {
-      try {
-        const file = req.files.image;
-        
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(file.mimetype)) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid file type. Only JPEG, PNG and GIF are allowed.",
-          });
-        }
-
-        // Upload to Cloudinary
-        const result = await CloudinaryUpload(file.tempFilePath);
-        imagePath = result.secure_url;
-      } catch (uploadError) {
-        console.error("File upload error:", uploadError);
-        return res.status(500).json({
-          success: false,
-          message: "Failed to upload image.",
-          error: uploadError.message,
-        });
-      }
+    if (req.file) {
+      imagePath = /uploads/${req.file.filename};
     }
 
     // Insert trip
@@ -118,10 +93,6 @@ exports.addTrip = async (req, res) => {
     db.query(insertTripQuery, tripParams, (tripErr, tripResult) => {
       if (tripErr) {
         console.error("Database error: ", tripErr);
-        // If there was an uploaded file, remove it since the DB insert failed
-        if (req.file) {
-          fs.unlinkSync(req.file.path);
-        }
         return res.status(500).json({
           success: false,
           message: "Failed to add trip.",
@@ -207,7 +178,7 @@ exports.updateTrip = async (req, res) => {
             fs.unlinkSync(oldImagePath);
           }
         }
-        imagePath = `/uploads/${req.file.filename}`;
+        imagePath = /uploads/${req.file.filename};
       }
 
       // Update trip
@@ -390,7 +361,7 @@ exports.getTripByStatus = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "${status} trips fetched successfully.",
+        message: ${status} trips fetched successfully.,
         data: results,
       });
     });

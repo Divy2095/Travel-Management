@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import {
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaRupeeSign,
+} from "react-icons/fa";
 import Goa from "./assets/Goa.jpeg";
 import Photo2 from "./assets/Photo2.jpeg";
 import Photo3 from "./assets/Photo3.jpeg";
@@ -15,6 +21,10 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  // Trip state management
+  const [trips, setTrips] = useState([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -27,7 +37,28 @@ const Dashboard = () => {
         localStorage.removeItem("user");
       }
     }
+    // Fetch trips when component mounts
+    fetchTrips();
   }, []);
+
+  // Fetch trips function
+  const fetchTrips = async () => {
+    try {
+      setLoadingTrips(true);
+      const response = await fetch("http://localhost:3000/api/trips");
+      const result = await response.json();
+
+      if (result.success) {
+        setTrips(result.data || []);
+      } else {
+        console.error("Failed to fetch trips:", result.message);
+      }
+    } catch (error) {
+      console.error("Error fetching trips:", error);
+    } finally {
+      setLoadingTrips(false);
+    }
+  };
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -264,6 +295,187 @@ const Dashboard = () => {
               />
             </div>
           </div>
+        </section>
+
+        {/* Available Trips Section */}
+        <section className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+              Available Trips
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Discover amazing destinations and book your next adventure. Choose
+              from our curated selection of trips.
+            </p>
+          </div>
+
+          {loadingTrips ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 h-48 rounded-t-xl"></div>
+                  <div className="bg-gray-100 p-4 rounded-b-xl">
+                    <div className="bg-gray-200 h-4 w-3/4 rounded mb-3"></div>
+                    <div className="bg-gray-200 h-3 w-1/2 rounded mb-2"></div>
+                    <div className="bg-gray-200 h-3 w-2/3 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : trips.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                <FaCalendarAlt className="text-gray-400 text-3xl" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No Trips Available
+              </h3>
+              <p className="text-gray-500">
+                Check back soon for exciting new destinations!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {trips.map((trip, index) => {
+                // Sample images for demonstration
+                const sampleImages = [
+                  Goa,
+                  Photo2,
+                  Photo3,
+                  Photo4,
+                  Photo5,
+                  Photo6,
+                ];
+
+                // Sample descriptions for demonstration
+                const sampleDescriptions = [
+                  "Experience beautiful beaches and vibrant culture in this amazing destination.",
+                  "Discover historic landmarks and enjoy authentic local cuisine on this journey.",
+                  "Adventure awaits with stunning landscapes and thrilling activities.",
+                  "Relax and unwind in this peaceful getaway with breathtaking views.",
+                  "Explore hidden gems and create unforgettable memories.",
+                  "Join us for an incredible journey filled with fun and excitement.",
+                ];
+
+                return (
+                  <div
+                    key={trip.id}
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group"
+                  >
+                    {/* Trip Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={
+                          trip.image ||
+                          sampleImages[index % sampleImages.length]
+                        }
+                        alt={trip.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.src =
+                            sampleImages[index % sampleImages.length];
+                        }}
+                      />
+                      <div className="absolute top-3 right-3">
+                        <span className="bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-gray-700 shadow-sm">
+                          {new Date(trip.date) > new Date()
+                            ? "Available"
+                            : "Past Trip"}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <h3 className="text-white font-bold text-lg mb-1 truncate">
+                          {trip.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Trip Details */}
+                    <div className="p-4">
+                      {/* Description */}
+                      <p
+                        className="text-gray-600 text-sm mb-4 overflow-hidden"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          minHeight: "2.5rem",
+                        }}
+                      >
+                        {trip.description ||
+                          sampleDescriptions[index % sampleDescriptions.length]}
+                      </p>
+
+                      {/* Trip Info Grid */}
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center gap-2">
+                          <FaCalendarAlt className="text-blue-500 text-sm" />
+                          <span className="text-xs font-medium text-gray-700">
+                            {new Date(trip.date).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaMapMarkerAlt className="text-red-500 text-sm" />
+                          <span className="text-xs font-medium text-gray-700 truncate">
+                            {trip.location_name || "Destination"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaUsers className="text-green-500 text-sm" />
+                          <span className="text-xs font-medium text-gray-700">
+                            Max {trip.max_participants || "N/A"} people
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Price and Book Button */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <FaRupeeSign className="text-green-600 text-sm" />
+                          <span className="text-xl font-bold text-green-600">
+                            {trip.price
+                              ? Number(trip.price).toLocaleString()
+                              : "N/A"}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            per person
+                          </span>
+                        </div>
+
+                        <button
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                            new Date(trip.date) > new Date()
+                              ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg"
+                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          }`}
+                          disabled={new Date(trip.date) <= new Date()}
+                        >
+                          {new Date(trip.date) > new Date()
+                            ? "Book Now"
+                            : "Unavailable"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* View All Trips Button */}
+          {trips.length > 8 && (
+            <div className="text-center mt-8">
+              <button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 shadow-md hover:shadow-lg">
+                View All Trips
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Services Section */}

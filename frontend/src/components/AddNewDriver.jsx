@@ -1,8 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TiPlus } from "react-icons/ti";
+import {
+  FaEdit,
+  FaTrash,
+  FaUser,
+  FaPhone,
+  FaEnvelope,
+  FaCar,
+  FaStar,
+} from "react-icons/fa";
+import { MdVerified } from "react-icons/md";
 
 const AddNewDriver = ({ onDriverAdded }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [drivers, setDrivers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,20 +38,87 @@ const AddNewDriver = ({ onDriverAdded }) => {
     });
   };
 
+  // Fetch Drivers
+  const fetchDrivers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("http://localhost:3000/api/drivers");
+      const result = await response.json();
+      if (result.success) {
+        setDrivers(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDrivers();
+  }, []);
+
+  // Handle Edit Driver
+  const handleEdit = (driver) => {
+    setSelectedDriver(driver);
+    setFormData({
+      name: driver.name,
+      email: driver.email,
+      phone: driver.phone,
+      license_number: driver.license_number,
+      license_expiry: driver.license_expiry,
+      address: driver.address,
+      status: driver.status,
+      assigned_vehicle_id: driver.assigned_vehicle_id || "",
+      profile_photo: driver.profile_photo || "",
+      rating: driver.rating || "",
+    });
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  // Handle Delete Driver
+  const handleDelete = async (driverId) => {
+    if (!window.confirm("Are you sure you want to delete this driver?")) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/drivers/${driverId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        fetchDrivers();
+      } else {
+        const error = await response.json();
+        alert(error.message || "Failed to delete driver");
+      }
+    } catch (error) {
+      console.error("Error deleting driver:", error);
+      alert("Failed to delete driver");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:3000/api/drivers", {
-        method: "POST",
+      const url = isEditMode
+        ? `http://localhost:3000/api/drivers/${selectedDriver.id}`
+        : "http://localhost:3000/api/drivers";
+
+      const response = await fetch(url, {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          entry_by: "admin", // Or get from user context
+          [isEditMode ? "update_by" : "entry_by"]: "admin", // Or get from user context
         }),
       });
 
@@ -80,8 +161,24 @@ const AddNewDriver = ({ onDriverAdded }) => {
 
   return (
     <>
+      {/* Add Driver Card */}
       <div
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => {
+          setIsEditMode(false);
+          setFormData({
+            name: "",
+            email: "",
+            phone: "",
+            license_number: "",
+            license_expiry: "",
+            address: "",
+            status: "active",
+            assigned_vehicle_id: "",
+            profile_photo: "",
+            rating: "",
+          });
+          setIsModalOpen(true);
+        }}
         className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-8 shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl relative overflow-hidden group"
       >
         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-400 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
@@ -90,7 +187,9 @@ const AddNewDriver = ({ onDriverAdded }) => {
           <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm mb-4 group-hover:bg-white/30 transition-colors">
             <TiPlus className="text-white text-3xl" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">Add New Driver</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Add New Driver
+          </h3>
           <p className="text-emerald-100 text-center">
             Register a new driver in the system
           </p>
@@ -100,9 +199,29 @@ const AddNewDriver = ({ onDriverAdded }) => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg w-full max-w-md p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Add New Driver
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {isEditMode ? "Edit Driver" : "Add New Driver"}
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -230,9 +349,15 @@ const AddNewDriver = ({ onDriverAdded }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50"
                 >
-                  {loading ? "Adding..." : "Add Driver"}
+                  {loading
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Adding..."
+                    : isEditMode
+                    ? "Update Driver"
+                    : "Add Driver"}
                 </button>
               </div>
             </form>
