@@ -50,14 +50,21 @@ const processPayment = async (nonce, amount) => {
 
     if (!result.success) {
       const errorMsg =
-        result.transaction?.processorResponseText || "Payment declined";
+        result.transaction?.processorResponseText ||
+        result.message ||
+        "Payment declined";
       console.error("Payment failed:", {
         status: result.transaction?.status,
         code: result.transaction?.processorResponseCode,
+        errors: result.errors,
+        message: result.message,
+        transaction: result.transaction,
       });
       return {
         success: false,
         message: errorMsg,
+        errors: result.errors,
+        transaction: result.transaction,
       };
     }
 

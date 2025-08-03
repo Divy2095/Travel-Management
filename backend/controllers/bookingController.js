@@ -82,9 +82,15 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    const total_amount = trip[0].price * participants;
+    const total_amount = Number(trip[0].price) * Number(participants);
 
     // Process payment
+    console.log(
+      "Processing payment with amount:",
+      total_amount,
+      "and nonce:",
+      payment_nonce
+    );
     const paymentResult = await processPayment(payment_nonce, total_amount);
     console.log("paymentResult", paymentResult);
     if (!paymentResult.success) {
@@ -170,6 +176,7 @@ exports.getAllBookings = async (req, res) => {
       JOIN trips t ON b.trip_id = t.id
       LEFT JOIN users u ON b.user_id = u.id
     `;
+    console.log(query);
 
     let countQuery = "SELECT COUNT(*) as total FROM bookings";
     const queryParams = [];
@@ -185,9 +192,11 @@ exports.getAllBookings = async (req, res) => {
     query += " ORDER BY b.booking_date DESC LIMIT ? OFFSET ?";
     queryParams.push(parseInt(limit));
     queryParams.push(parseInt(offset));
+    console.log();
 
     const [bookings] = await db.promise().query(query, queryParams);
     const [[count]] = await db.promise().query(countQuery, countParams);
+    console.log(bookings);
 
     res.json({
       success: true,
