@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -11,15 +11,22 @@ import {
   FaPhone,
   FaEnvelope,
   FaIdCard,
+  FaCreditCard,
 } from "react-icons/fa";
 
 const BookingForm = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const dropinContainerRef = useRef(null);
+
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState(null);
+  const [braintreeInstance, setBraintreeInstance] = useState(null);
+  const [clientToken, setClientToken] = useState(null);
+  const [dropInReady, setDropInReady] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -33,7 +40,61 @@ const BookingForm = () => {
   });
 
   useEffect(() => {
-    // Get user data from localStorage
+    console.log("Braintree instance state:", {
+      instance: !!braintreeInstance,
+      ready: dropInReady,
+      clientToken: !!clientToken,
+    });
+  }, [braintreeInstance, dropInReady, clientToken]);
+
+  // Initialize Braintree DropIn
+  useEffect(() => {
+    if (!clientToken || braintreeInstance) return;
+
+    let instance;
+    const initializeBraintree = async () => {
+      try {
+        const dropin = await import("braintree-web-drop-in");
+        instance = await dropin.create({
+          authorization: clientToken,
+          container: "#braintree-dropin-container",
+          paypal: {
+            flow: "vault",
+            amount: calculateTotal().toString(),
+            currency: "INR",
+          },
+          card: {
+            cardholderName: {
+              required: true,
+            },
+          },
+        });
+
+        setBraintreeInstance(instance);
+        setDropInReady(true);
+        setPaymentError(null);
+      } catch (error) {
+        console.error("Braintree initialization error:", error);
+        setPaymentError(
+          "Failed to initialize payment system. Please refresh the page."
+        );
+        setDropInReady(false);
+      }
+    };
+
+    initializeBraintree();
+
+    return () => {
+      if (instance) {
+        instance.teardown().catch((e) => {
+          console.error("Error during Braintree teardown:", e);
+        });
+      }
+    };
+  }, [clientToken]);
+
+  // Fetch user data and initialize
+  useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
       const parsedUser = JSON.parse(userData);
@@ -45,30 +106,41 @@ const BookingForm = () => {
       }));
     }
 
-    // Fetch trip details
-    fetchTripDetails();
-  }, [tripId]);
+    const fetchData = async () => {
+      try {
+        const [tokenRes, tripRes] = await Promise.all([
+          fetch("http://localhost:3000/api/bookings/client_token"),
+          fetch(`http://localhost:3000/api/trips/${tripId}`),
+        ]);
 
-  const fetchTripDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`http://localhost:3000/api/trips/${tripId}`);
-      const result = await response.json();
+        const tokenResult = await tokenRes.json();
+        const tripResult = await tripRes.json();
 
-      if (result.success) {
-        setTrip(result.data);
-      } else {
-        toast.error("Trip not found");
+        if (tokenResult.success) {
+          setClientToken(tokenResult.clientToken);
+        } else {
+          toast.error("Failed to load payment gateway");
+          setPaymentError("Payment system unavailable");
+        }
+
+        if (tripResult.success) {
+          setTrip(tripResult.data);
+        } else {
+          toast.error("Trip not found");
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+        setPaymentError("Connection error. Please try again.");
         navigate("/");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching trip:", error);
-      toast.error("Failed to load trip details");
-      navigate("/");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchData();
+  }, [tripId, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -91,35 +163,56 @@ const BookingForm = () => {
       return;
     }
 
+    if (!braintreeInstance) {
+      toast.error("Payment system not ready. Please wait...");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      console.log("Requesting payment method...");
+      const payload = await braintreeInstance.requestPaymentMethod();
+      console.log("Received payment payload:", payload);
+
+      const { nonce } = payload;
+      if (!nonce) throw new Error("Payment method not selected");
+
       const bookingData = {
         tripId: trip.id,
         userId: user?.id,
         ...formData,
         totalAmount: trip.price * formData.participants,
+        payment_nonce: nonce,
       };
-
-      const response = await fetch("http://localhost:3000/api/bookings", {
+      console.log("booking data", bookingData);
+      const response = await fetch("http://localhost:3000/api/bookings/", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json", // Add this header
         },
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify(bookingData), // Make sure to stringify the data
       });
 
       const result = await response.json();
+      console.log("Booking response:", result);
 
       if (result.success) {
-        toast.success("Booking submitted successfully!");
-        navigate("/", { state: { bookingSuccess: true } });
+        toast.success("Booking and payment processed successfully!");
+        navigate("/bookings/success", {
+          state: {
+            bookingId: result.data.bookingId,
+            amount: result.data.amount,
+          },
+        });
       } else {
-        toast.error(result.message || "Failed to submit booking");
+        toast.error(result.message || "Failed to process booking");
       }
     } catch (error) {
-      console.error("Error submitting booking:", error);
-      toast.error("Failed to submit booking. Please try again.");
+      console.error("Payment processing error:", error);
+      toast.error(
+        error.message || "Failed to process payment. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -389,6 +482,60 @@ const BookingForm = () => {
                   />
                 </div>
 
+                {/* Payment Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    <FaCreditCard className="inline mr-2" />
+                    Payment Information
+                  </h3>
+
+                  {clientToken ? (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      {paymentError && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">
+                          {paymentError}
+                        </div>
+                      )}
+
+                      <div
+                        id="braintree-dropin-container"
+                        ref={dropinContainerRef}
+                      ></div>
+
+                      {!braintreeInstance && (
+                        <div className="text-center py-4">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                          <p className="mt-2 text-gray-600">
+                            Initializing payment gateway...
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="mt-4 p-3 bg-yellow-50 rounded text-xs">
+                        <p className="font-medium">Payment System Status:</p>
+                        <p>
+                          • Client Token:{" "}
+                          {clientToken ? "✅ Valid" : "❌ Missing"}
+                        </p>
+                        <p>
+                          • DropIn Instance:{" "}
+                          {braintreeInstance ? "✅ Created" : "❌ Not created"}
+                        </p>
+                        <p>
+                          • Payment Ready: {dropInReady ? "✅ Yes" : "❌ No"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="mt-2 text-gray-600">
+                        Loading payment gateway...
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Terms and Conditions */}
                 <div className="flex items-start gap-3">
                   <input
@@ -417,9 +564,9 @@ const BookingForm = () => {
                 <div className="border-t pt-6">
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || !dropInReady}
                     className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                      submitting
+                      submitting || !dropInReady
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl"
                     }`}
@@ -427,12 +574,17 @@ const BookingForm = () => {
                     {submitting ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Processing...
+                        Processing Payment...
                       </div>
                     ) : (
-                      `Confirm Booking - ₹${calculateTotal().toLocaleString()}`
+                      `Pay ₹${calculateTotal().toLocaleString()} & Confirm Booking`
                     )}
                   </button>
+                  {!dropInReady && !submitting && clientToken && (
+                    <p className="text-sm text-red-500 mt-2 text-center">
+                      Please complete the payment information above
+                    </p>
+                  )}
                 </div>
               </form>
             </div>

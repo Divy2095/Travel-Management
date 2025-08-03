@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   total_amount DECIMAL(10, 2) NOT NULL,
   booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+   payment_id VARCHAR(255),
   entry_by VARCHAR(100),
   update_by VARCHAR(100),
   entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -133,6 +134,23 @@ tables.forEach((query, index) => {
       console.error(`Error creating table ${index + 1}:`, err.message);
     } else {
       console.log(`Table ${index + 1} created or already exists`);
+    }
+  });
+});
+
+const indexes = [
+  `CREATE INDEX idx_bookings_trip_id ON bookings(trip_id)`,
+  `CREATE INDEX idx_bookings_user_id ON bookings(user_id)`,
+  `CREATE INDEX idx_bookings_status ON bookings(status)`,
+  `CREATE INDEX idx_bookings_booking_date ON bookings(booking_date)`,
+];
+
+indexes.forEach((query, index) => {
+  db.query(query, (err) => {
+    if (err) {
+      console.error(`Error creating index ${index + 1}:`, err.message);
+    } else {
+      console.log(`Index ${index + 1} created or already exists`);
     }
   });
 });
