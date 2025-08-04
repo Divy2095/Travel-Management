@@ -10,6 +10,7 @@ import RecentDrivers from "./components/RecentDrivers";
 import RecentVehicles from "./components/RecentVehicles";
 import RecentUsers from "./components/RecentUsers";
 import RecentReviews from "./components/RecentReviews";
+import RecentBookings from "./components/RecentBookings";
 import Modal from "./components/Modal";
 import EditTripForm from "./components/EditTripForm";
 import EditDriverForm from "./components/EditDriverForm";
@@ -32,6 +33,7 @@ const AdminDashboard = () => {
     totalVehicles: 0,
     totalUsers: 0,
     totalReviews: 0,
+    totalBookings: 0,
   });
 
   // Data states
@@ -40,6 +42,7 @@ const AdminDashboard = () => {
   const [vehicles, setVehicles] = useState([]);
   const [users, setUsers] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
   // Modal states
   const [editModal, setEditModal] = useState({
@@ -118,11 +121,23 @@ const AdminDashboard = () => {
           return { data: [] };
         });
 
+      // Fetch bookings
+      const bookingsRes = await axios
+        .get(`${API_BASE_URL}/bookings`)
+        .catch((err) => {
+          console.error(
+            "❌ Error fetching bookings:",
+            err.response?.data || err.message
+          );
+          return { data: [] };
+        });
+
       console.log("🔍 Raw API Responses:", {
         trips: tripsRes.data,
         drivers: driversRes.data,
         vehicles: vehiclesRes.data,
         users: usersRes.data,
+        bookings: bookingsRes.data,
       });
 
       // Handle different response structures
@@ -130,18 +145,21 @@ const AdminDashboard = () => {
       const driversData = driversRes.data?.data || driversRes.data || [];
       const vehiclesData = vehiclesRes.data?.data || vehiclesRes.data || [];
       const usersData = usersRes.data?.data || usersRes.data || [];
+      const bookingsData = bookingsRes.data?.data || bookingsRes.data || [];
 
       console.log("✅ Processed Data:", {
         trips: tripsData.length,
         drivers: driversData.length,
         vehicles: vehiclesData.length,
         users: usersData.length,
+        bookings: bookingsData.length,
       });
 
       setTrips(tripsData);
       setDrivers(driversData);
       setVehicles(vehiclesData);
       setUsers(usersData);
+      setBookings(bookingsData);
       setReviews([]); // No reviews API yet
 
       // Update stats
@@ -150,7 +168,8 @@ const AdminDashboard = () => {
         totalDrivers: driversData.length,
         totalVehicles: vehiclesData.length,
         totalUsers: usersData.length,
-        totalReviews: 0, // No reviews yet
+        totalReviews: 0,
+        totalBookings: bookingsData.length,
       };
 
       setStats(newStats);
@@ -250,6 +269,9 @@ const AdminDashboard = () => {
         case "vehicle":
           endpoint = `${API_BASE_URL}/vehicles/${data.id}`;
           break;
+        case "booking":
+          endpoint = `${API_BASE_URL}/bookings/${data.id}`;
+          break;
         default:
           return;
       }
@@ -276,6 +298,13 @@ const AdminDashboard = () => {
             totalVehicles: prev.totalVehicles - 1,
           }));
           break;
+        case "booking":
+          setBookings(bookings.filter((booking) => booking.id !== data.id));
+          setStats((prev) => ({
+            ...prev,
+            totalBookings: prev.totalBookings - 1,
+          }));
+          break;
       }
 
       setDeleteModal({ isOpen: false, type: null, data: null });
@@ -288,9 +317,63 @@ const AdminDashboard = () => {
     }
   };
 
+  // Booking handlers
+  const handleViewBooking = (booking) => {
+    alert(`Viewing booking details for booking ID: ${booking.id}`);
+    // You can implement a modal to show booking details
+  };
+
+  const handleUpdateBookingStatus = async (bookingId, newStatus) => {
+    try {
+      await axios.put(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+        status: newStatus,
+      });
+
+      // Update local state
+      setBookings(
+        bookings.map((booking) =>
+          booking.id === bookingId ? { ...booking, status: newStatus } : booking
+        )
+      );
+
+      alert(`Booking status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      alert("Error updating booking status. Please try again.");
+    }
+  };
+
+  const handleEditBooking = (booking) => {
+    alert(`Edit booking functionality for booking ID: ${booking.id}`);
+    // You can implement booking edit functionality here
+  };
+
+  const handleDeleteBooking = async (booking) => {
+    if (
+      window.confirm(`Are you sure you want to delete booking #${booking.id}?`)
+    ) {
+      try {
+        await axios.delete(`${API_BASE_URL}/bookings/${booking.id}`);
+
+        // Update local state
+        setBookings(bookings.filter((b) => b.id !== booking.id));
+        setStats((prev) => ({
+          ...prev,
+          totalBookings: prev.totalBookings - 1,
+        }));
+
+        alert("Booking deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting booking:", error);
+        alert("Error deleting booking. Please try again.");
+      }
+    }
+  };
+
   // Tab navigation
   const tabs = [
     { id: "overview", label: "Overview" },
+    { id: "bookings", label: "Manage Bookings" },
     { id: "trips", label: "Manage Trips" },
     { id: "drivers", label: "Manage Drivers" },
     { id: "vehicles", label: "Manage Vehicles" },
@@ -304,26 +387,47 @@ const AdminDashboard = () => {
         return (
           <div className="space-y-8">
             <StatsSection stats={stats} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <RecentTrips
-                trips={trips}
-                onEdit={(trip) => handleEdit("trip", trip)}
-                onDelete={(trip) => handleDelete("trip", trip)}
+            <div className="space-y-8">
+              {/* Recent Bookings - Full width */}
+              <RecentBookings
+                bookings={bookings}
+                onView={handleViewBooking}
+                onEdit={handleEditBooking}
+                onDelete={handleDeleteBooking}
+                onUpdateStatus={handleUpdateBookingStatus}
               />
-              <RecentDrivers
-                drivers={drivers}
-                onEdit={(driver) => handleEdit("driver", driver)}
-                onDelete={(driver) => handleDelete("driver", driver)}
-              />
-              <RecentVehicles
-                vehicles={vehicles}
-                onEdit={(vehicle) => handleEdit("vehicle", vehicle)}
-                onDelete={(vehicle) => handleDelete("vehicle", vehicle)}
-              />
-              <RecentUsers users={users} />
-              <RecentReviews reviews={reviews} />
+
+              {/* Other components in grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <RecentTrips
+                  trips={trips}
+                  onEdit={(trip) => handleEdit("trip", trip)}
+                  onDelete={(trip) => handleDelete("trip", trip)}
+                />
+                <RecentDrivers
+                  drivers={drivers}
+                  onEdit={(driver) => handleEdit("driver", driver)}
+                  onDelete={(driver) => handleDelete("driver", driver)}
+                />
+                <RecentVehicles
+                  vehicles={vehicles}
+                  onEdit={(vehicle) => handleEdit("vehicle", vehicle)}
+                  onDelete={(vehicle) => handleDelete("vehicle", vehicle)}
+                />
+                <RecentUsers users={users} />
+              </div>
             </div>
           </div>
+        );
+      case "bookings":
+        return (
+          <RecentBookings
+            bookings={bookings}
+            onView={handleViewBooking}
+            onEdit={handleEditBooking}
+            onDelete={handleDeleteBooking}
+            onUpdateStatus={handleUpdateBookingStatus}
+          />
         );
       case "trips":
         return <AddNewTrip onTripAdded={fetchAllData} />;

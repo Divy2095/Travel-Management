@@ -6,10 +6,8 @@ const BookingSuccess = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  if (!state?.bookingId) {
-    navigate("/");
-    return null;
-  }
+  // If no booking data, show a generic success message
+  const bookingData = state || {};
 
   const handlePrint = () => {
     window.print();
@@ -18,6 +16,10 @@ const BookingSuccess = () => {
   const handleEmail = () => {
     // Implement email functionality
     alert("Receipt will be sent to your email");
+  };
+
+  const handleGoHome = () => {
+    navigate("/");
   };
 
   return (
@@ -33,17 +35,41 @@ const BookingSuccess = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h2 className="text-lg font-semibold mb-2">Booking Details</h2>
-              <p>
-                <span className="font-medium">Booking ID:</span>{" "}
-                {state.bookingId}
-              </p>
-              <p>
-                <span className="font-medium">Amount Paid:</span> ₹
-                {state.amount.toLocaleString()}
-              </p>
-              <p>
-                <span className="font-medium">Status:</span> Confirmed
-              </p>
+              {bookingData.bookingId ? (
+                <>
+                  <p>
+                    <span className="font-medium">Booking ID:</span> #
+                    {bookingData.bookingId}
+                  </p>
+                  <p>
+                    <span className="font-medium">Amount Paid:</span> ₹
+                    {bookingData.amount?.toLocaleString() || "N/A"}
+                  </p>
+                  {bookingData.tripTitle && (
+                    <p>
+                      <span className="font-medium">Trip:</span>{" "}
+                      {bookingData.tripTitle}
+                    </p>
+                  )}
+                  {bookingData.paymentId && (
+                    <p>
+                      <span className="font-medium">Payment ID:</span>{" "}
+                      {bookingData.paymentId}
+                    </p>
+                  )}
+                  <p>
+                    <span className="font-medium">Payment Status:</span>{" "}
+                    <span className="text-green-600 font-medium">
+                      {bookingData.status || "Confirmed"}
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-gray-600">
+                  Your booking has been successfully processed! You should
+                  receive a confirmation email shortly.
+                </p>
+              )}
             </div>
 
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -59,18 +85,34 @@ const BookingSuccess = () => {
           <div className="border-t pt-6">
             <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="mb-2">
-                <span className="font-medium">Trip:</span>{" "}
-                {state.booking?.trip_title}
-              </p>
-              <p className="mb-2">
-                <span className="font-medium">Date:</span>{" "}
-                {new Date(state.booking?.trip_date).toLocaleDateString()}
-              </p>
-              <p>
-                <span className="font-medium">Participants:</span>{" "}
-                {state.booking?.participants}
-              </p>
+              {bookingData.bookingDetails || bookingData.tripTitle ? (
+                <>
+                  {bookingData.tripTitle && (
+                    <p className="mb-2">
+                      <span className="font-medium">Trip:</span>{" "}
+                      {bookingData.tripTitle}
+                    </p>
+                  )}
+                  {bookingData.bookingDetails?.trip_date && (
+                    <p className="mb-2">
+                      <span className="font-medium">Date:</span>{" "}
+                      {new Date(
+                        bookingData.bookingDetails.trip_date
+                      ).toLocaleDateString()}
+                    </p>
+                  )}
+                  {bookingData.bookingDetails?.participants && (
+                    <p>
+                      <span className="font-medium">Participants:</span>{" "}
+                      {bookingData.bookingDetails.participants}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-600">
+                  Trip details will be available in your confirmation email.
+                </p>
+              )}
             </div>
           </div>
 
@@ -88,7 +130,7 @@ const BookingSuccess = () => {
               <FaEnvelope /> Email Receipt
             </button>
             <button
-              onClick={() => navigate("/")}
+              onClick={handleGoHome}
               className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
             >
               <FaHome /> Back to Home

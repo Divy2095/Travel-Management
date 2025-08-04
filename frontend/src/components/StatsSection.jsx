@@ -5,6 +5,7 @@ import {
   FaUsers,
   FaStar,
   FaTachometerAlt,
+  FaCalendarCheck,
 } from "react-icons/fa";
 
 const StatsCard = ({ icon: Icon, title, value, subtitle, color, bgColor }) => (
@@ -31,7 +32,7 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color, bgColor }) => (
 
 const StatsSection = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
       <StatsCard
         icon={FaRoute}
         title="Total Trips"
@@ -39,6 +40,14 @@ const StatsSection = ({ stats }) => {
         subtitle="Available trips"
         color="border-l-blue-500"
         bgColor="bg-blue-50"
+      />
+      <StatsCard
+        icon={FaCalendarCheck}
+        title="Total Bookings"
+        value={stats.totalBookings || 0}
+        subtitle="All bookings"
+        color="border-l-purple-500"
+        bgColor="bg-purple-50"
       />
       <StatsCard
         icon={FaCar}

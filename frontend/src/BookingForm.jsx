@@ -199,10 +199,14 @@ const BookingForm = () => {
 
       if (result.success) {
         toast.success("Booking and payment processed successfully!");
-        navigate("/bookings/success", {
+        navigate("/booking-success", {
           state: {
             bookingId: result.data.bookingId,
-            amount: result.data.amount,
+            amount: result.data.payment?.amount || calculateTotal(),
+            tripTitle: trip.title,
+            bookingDetails: result.data.booking,
+            paymentId: result.data.payment?.id,
+            status: result.data.payment?.status || "confirmed",
           },
         });
       } else {
