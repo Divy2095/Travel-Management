@@ -8,10 +8,16 @@ const vehicleRoutes = require("./routes/vehicles");
 const driverRoutes = require("./routes/drivers");
 const tripRoutes = require("./routes/trips");
 const bookingRoutes = require("./routes/bookings");
+const driverMoneyRoutes = require("./routes/driverMoney");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
@@ -20,6 +26,7 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/drivers", driverRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/driver-money", driverMoneyRoutes);
 
 app.get("/", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {

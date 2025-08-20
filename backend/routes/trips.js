@@ -176,4 +176,110 @@ router.post("/", async (req, res) => {
   });
 });
 
+// Update a trip
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    date,
+    location_id,
+    price,
+    duration,
+    max_participants,
+    status,
+  } = req.body;
+
+  // Validate required fields
+  if (!title || !description || !date) {
+    return res.status(400).json({
+      success: false,
+      message: "Title, description, and date are required.",
+    });
+  }
+
+  let imageUrl = null;
+
+  // Handle image upload if provided
+  try {
+    if (req.files && req.files.image) {
+      const cloudRes = await CloudinaryUpload(req.files.image, "trips");
+      imageUrl = cloudRes.secure_url;
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Image upload failed",
+      error: err.message,
+    });
+  }
+
+  // Prepare trip data
+  const tripData = {
+    title,
+    description,
+    date,
+    location_id: location_id && location_id !== "null" ? location_id : null,
+    price: price ? parseFloat(price) : null,
+    duration: duration || null,
+    max_participants: max_participants || 10,
+    status: status || "active",
+  };
+
+  // Add image only if a new one was uploaded
+  if (imageUrl) {
+    tripData.image = imageUrl;
+  }
+
+  // Update in database
+  db.query("UPDATE trips SET ? WHERE id = ?", [tripData, id], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update trip",
+        error: err.message,
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Trip updated successfully",
+    });
+  });
+});
+
+// Delete a trip
+router.delete("/:id", (req, res) => {
+  const { id } = req.params;
+
+  db.query("DELETE FROM trips WHERE id = ?", [id], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error deleting trip",
+        error: err.message,
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Trip deleted successfully",
+    });
+  });
+});
+
 module.exports = router;

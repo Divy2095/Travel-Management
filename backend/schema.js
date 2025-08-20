@@ -6,6 +6,21 @@ const db = require("./database/db");
 // db.query("DROP TABLE IF EXISTS trips");
 // db.query("DROP TABLE IF EXISTS locations");
 // db.query("DROP TABLE IF EXISTS cities");
+const driver_money = `
+  CREATE TABLE IF NOT EXISTS driver_money (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    driver_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_type ENUM('credit', 'debit') NOT NULL,
+    description TEXT NOT NULL,
+    trip_id INT,
+    entry_by VARCHAR(255),
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE,
+    FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE SET NULL
+);
+`;
+
 
 const users = `
 CREATE TABLE IF NOT EXISTS users (
@@ -126,7 +141,34 @@ CREATE TABLE IF NOT EXISTS bookings (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 )`;
 
-const tables = [users, vehicles, cities, locations, drivers, trips, bookings];
+const driverMoney = `
+CREATE TABLE IF NOT EXISTS driver_money (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  driver_id INT NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  transaction_type ENUM('credit', 'debit') NOT NULL,
+  description TEXT NOT NULL,
+  trip_id INT,
+  transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  entry_by VARCHAR(100),
+  update_by VARCHAR(100),
+  entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE,
+  FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE SET NULL
+)`;
+
+const tables = [
+  users,
+  vehicles,
+  cities,
+  locations,
+  drivers,
+  trips,
+  bookings,
+  driverMoney,
+  driver_money
+];
 
 tables.forEach((query, index) => {
   db.query(query, (err) => {

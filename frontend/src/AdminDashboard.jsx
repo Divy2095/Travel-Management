@@ -201,16 +201,23 @@ const AdminDashboard = () => {
       switch (type) {
         case "trip":
           endpoint = `${API_BASE_URL}/trips/${updatedData.id}`;
+          console.log("Updating trip:", updatedData);
           break;
         case "driver":
           endpoint = `${API_BASE_URL}/drivers/${updatedData.id}`;
+          console.log("Updating driver:", updatedData);
           break;
         case "vehicle":
           endpoint = `${API_BASE_URL}/vehicles/${updatedData.id}`;
+          console.log("Updating vehicle:", updatedData);
           break;
         default:
           return;
       }
+
+      // Add debug logging for the request
+      console.log("Making PUT request to:", endpoint);
+      console.log("With data:", updatedData);
 
       await axios.put(endpoint, updatedData);
 
@@ -262,15 +269,20 @@ const AdminDashboard = () => {
       switch (type) {
         case "trip":
           endpoint = `${API_BASE_URL}/trips/${data.id}`;
+          console.log("Deleting trip with ID:", data.id);
+          console.log("Full trip data:", data);
           break;
         case "driver":
           endpoint = `${API_BASE_URL}/drivers/${data.id}`;
+          console.log("Deleting driver with ID:", data.id);
           break;
         case "vehicle":
           endpoint = `${API_BASE_URL}/vehicles/${data.id}`;
+          console.log("Deleting vehicle with ID:", data.id);
           break;
         case "booking":
           endpoint = `${API_BASE_URL}/bookings/${data.id}`;
+          console.log("Deleting booking with ID:", data.id);
           break;
         default:
           return;
