@@ -54,7 +54,9 @@ const BookingForm = () => {
     let instance;
     const initializeBraintree = async () => {
       try {
-        const dropin = await import("braintree-web-drop-in");
+        const dropin = await import("braintree-web-drop-in").then(
+          (module) => module.default
+        );
         instance = await dropin.create({
           authorization: clientToken,
           container: "#braintree-dropin-container",

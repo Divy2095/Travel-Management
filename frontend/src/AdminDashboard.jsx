@@ -21,6 +21,7 @@ import AddNewDriver from "./components/AddNewDriver";
 import AddNewVehicle from "./components/AddNewVehicle";
 import ManageUsers from "./components/ManageUsers";
 import ManageReviews from "./components/ManageReviews";
+import DriverMoneyManagement from "./components/DriverMoneyManagement";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -62,17 +63,10 @@ const AdminDashboard = () => {
   // API base URL
   const API_BASE_URL = "http://localhost:3000/api";
 
-  // Fetch all data on component mount and set up polling
+  // Fetch all data on component mount
   useEffect(() => {
     console.log("🚀 AdminDashboard mounted, fetching data...");
     fetchAllData();
-
-    // Set up polling for new bookings every 30 seconds
-    const pollInterval = setInterval(() => {
-      fetchAllData();
-    }, 30000);
-
-    return () => clearInterval(pollInterval);
   }, []);
 
   // Also add a manual refresh button for debugging
@@ -411,6 +405,7 @@ const AdminDashboard = () => {
     { id: "bookings", label: "Manage Bookings" },
     { id: "trips", label: "Manage Trips" },
     { id: "drivers", label: "Manage Drivers" },
+    { id: "drivermoney", label: "Driver Money" },
     { id: "vehicles", label: "Manage Vehicles" },
     { id: "users", label: "Manage Users" },
     { id: "reviews", label: "Manage Reviews" },
@@ -468,6 +463,8 @@ const AdminDashboard = () => {
         return <AddNewTrip onTripAdded={fetchAllData} />;
       case "drivers":
         return <AddNewDriver onDriverAdded={fetchAllData} />;
+      case "drivermoney":
+        return <DriverMoneyManagement />;
       case "vehicles":
         return <AddNewVehicle onVehicleAdded={fetchAllData} />;
       case "users":
