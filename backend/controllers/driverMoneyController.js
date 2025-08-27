@@ -132,3 +132,88 @@ exports.getBalance = (req, res) => {
     return res.status(500).json({ error: "Database error: " + error.message });
   }
 };
+
+// Update transaction
+exports.updateTransaction = (req, res) => {
+  const { id } = req.params;
+  const { amount, description, transaction_type } = req.body;
+
+  console.log("Update controller called with:", {
+    id,
+    body: req.body,
+    params: req.params,
+  });
+
+  if (!id) {
+    return res.status(400).json({ error: "Transaction ID is required" });
+  }
+
+  if (!amount || !description || !transaction_type) {
+    return res.status(400).json({
+      error:
+        "Missing required fields: amount, description, and transaction_type are required",
+    });
+  }
+
+  const query = `
+    UPDATE driver_money 
+    SET amount = ?, description = ?, transaction_type = ?
+    WHERE id = ?
+  `;
+
+  console.log("Executing query:", query, [
+    amount,
+    description,
+    transaction_type,
+    id,
+  ]);
+
+  db.query(
+    query,
+    [amount, description, transaction_type, id],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating transaction:", err);
+        return res
+          .status(500)
+          .json({ error: "Failed to update transaction: " + err.message });
+      }
+      console.log("Update result:", result);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+      res.json({ success: true, message: "Transaction updated successfully" });
+    }
+  );
+};
+
+// Delete transaction
+exports.deleteTransaction = (req, res) => {
+  const { id } = req.params;
+  console.log(
+    "[deleteTransaction] Attempting to delete transaction with id:",
+    id
+  );
+
+  if (!id) {
+    console.log("[deleteTransaction] No ID provided");
+    return res.status(400).json({ error: "Transaction ID is required" });
+  }
+
+  const query = `DELETE FROM driver_money WHERE id = ?`;
+
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error("[deleteTransaction] Database error:", err);
+      return res.status(500).json({ error: "Failed to delete transaction" });
+    }
+
+    console.log("[deleteTransaction] Query result:", result);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    res.json({ success: true, message: "Transaction deleted successfully" });
+  });
+};

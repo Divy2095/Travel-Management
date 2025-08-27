@@ -14,6 +14,10 @@ const DriverMoneyManagement = () => {
     total_debit: 0,
     balance: 0,
   });
+  const [editTransaction, setEditTransaction] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // Fetch drivers on component mount
   useEffect(() => {
@@ -30,7 +34,7 @@ const DriverMoneyManagement = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get("/api/drivers");
+      const response = await axios.get("http://localhost:3000/api/drivers");
       // Handle both possible response structures
       const driversData = response.data?.data || response.data || [];
       setDrivers(Array.isArray(driversData) ? driversData : []);
@@ -43,47 +47,153 @@ const DriverMoneyManagement = () => {
 
   const fetchTransactions = async () => {
     try {
+      console.log("Fetching transactions for driver:", selectedDriver);
       const response = await axios.get(
-        `/api/driver-money/${selectedDriver}/transactions`
+        `http://localhost:3000/api/driver-money/${selectedDriver}/transactions`
       );
-      setTransactions(response.data);
+      console.log("Transactions response:", response.data);
+      setTransactions(response.data || []);
     } catch (error) {
-      toast.error("Failed to fetch transactions");
+      console.error("Error fetching transactions:", error);
+      toast.error(
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch transactions"
+      );
+      setTransactions([]);
     }
   };
 
   const fetchBalance = async () => {
     try {
+      console.log("Fetching balance for driver:", selectedDriver);
       const response = await axios.get(
-        `/api/driver-money/${selectedDriver}/balance`
+        `http://localhost:3000/api/driver-money/${selectedDriver}/balance`
       );
-      setBalance(response.data);
+      console.log("Balance response:", response.data);
+      setBalance(
+        response.data || {
+          total_credit: 0,
+          total_debit: 0,
+          balance: 0,
+        }
+      );
     } catch (error) {
-      toast.error("Failed to fetch balance");
+      console.error("Error fetching balance:", error);
+      toast.error(
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch balance"
+      );
+      setBalance({
+        total_credit: 0,
+        total_debit: 0,
+        balance: 0,
+      });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const endpoint =
-        transactionType === "credit"
-          ? "/api/driver-money/add"
-          : "/api/driver-money/expense";
-      await axios.post(endpoint, {
-        driverId: selectedDriver,
-        amount: parseFloat(amount),
-        description,
-      });
+      if (editTransaction) {
+        // Handle edit
+        console.log("Editing transaction:", editTransaction.id);
+        const url = `http://localhost:3000/api/driver-money/update/${editTransaction.id}`;
+        const data = {
+          amount: parseFloat(amount),
+          description,
+          transaction_type: transactionType,
+          driver_id: selectedDriver,
+        };
+        const response = await axios.put(url, data);
+        if (response.data.success) {
+          toast.success("Transaction updated successfully");
+          setEditTransaction(null);
+        } else {
+          throw new Error(
+            response.data.error || "Failed to update transaction"
+          );
+        }
+      } else {
+        // Handle new transaction
+        const endpoint =
+          transactionType === "credit"
+            ? "/api/driver-money/add"
+            : "/api/driver-money/expense";
+        const response = await axios.post(`http://localhost:3000${endpoint}`, {
+          driverId: selectedDriver,
+          amount: parseFloat(amount),
+          description,
+        });
+        if (response.data.success) {
+          toast.success("Transaction recorded successfully");
+        } else {
+          throw new Error(
+            response.data.error || "Failed to create transaction"
+          );
+        }
+      }
 
-      toast.success("Transaction recorded successfully");
       setAmount("");
       setDescription("");
+      setTransactionType("credit");
+      setIsEditModalOpen(false);
       fetchTransactions();
       fetchBalance();
     } catch (error) {
-      toast.error("Failed to record transaction");
+      toast.error(
+        editTransaction
+          ? "Failed to update transaction"
+          : "Failed to record transaction"
+      );
     }
+  };
+
+  const handleEdit = (transaction) => {
+    console.log("Editing transaction:", transaction);
+    setEditTransaction(transaction);
+    setAmount(transaction.amount.toString());
+    setDescription(transaction.description);
+    setTransactionType(transaction.transaction_type);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (transaction) => {
+    if (!transaction || !transaction.id) {
+      toast.error("Invalid transaction data");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this transaction?")) {
+      try {
+        console.log("Deleting transaction:", transaction.id);
+        const response = await axios.delete(
+          `http://localhost:3000/api/driver-money/delete/${transaction.id}`
+        );
+
+        if (response.data.success) {
+          toast.success("Transaction deleted successfully");
+          await fetchTransactions();
+          await fetchBalance();
+        } else {
+          throw new Error(
+            response.data.error || "Failed to delete transaction"
+          );
+        }
+      } catch (error) {
+        console.error("Delete error:", error);
+        toast.error("Failed to delete transaction");
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditTransaction(null);
+    setAmount("");
+    setDescription("");
+    setTransactionType("credit");
+    setIsEditModalOpen(false);
   };
 
   const formatDate = (dateString) => {
@@ -159,13 +269,26 @@ const DriverMoneyManagement = () => {
     }
   };
 
+
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Driver Money Management</h2>
 
       {/* Transaction Form */}
       <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <h3 className="text-lg font-semibold mb-4">Record Transaction</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">
+            {editTransaction ? "Edit Transaction" : "Record Transaction"}
+          </h3>
+          {editTransaction && (
+            <button
+              onClick={handleCancelEdit}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block mb-1">Select Driver</label>
@@ -282,6 +405,7 @@ const DriverMoneyManagement = () => {
                   <th className="px-4 py-2">Amount</th>
                   <th className="px-4 py-2">Description</th>
                   <th className="px-4 py-2">Added By</th>
+                  <th className="px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -306,6 +430,28 @@ const DriverMoneyManagement = () => {
                     <td className="px-4 py-2">₹{transaction.amount}</td>
                     <td className="px-4 py-2">{transaction.description}</td>
                     <td className="px-4 py-2">{transaction.entry_by}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(transaction)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log(
+                              "Delete button clicked for transaction:",
+                              transaction
+                            );
+                            handleDelete(transaction);
+                          }}
+                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
