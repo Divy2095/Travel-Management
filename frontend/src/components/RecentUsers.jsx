@@ -29,7 +29,7 @@ const RecentUsers = ({ users }) => {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  {user.firstName} {user.lastName}
+                  {user.name}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
@@ -37,13 +37,18 @@ const RecentUsers = ({ users }) => {
                     <span>{user.email}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <FaPhone className="text-green-500" />
-                    <span>{user.contactNumber}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <FaCalendarAlt className="text-purple-500" />
                     <span>
-                      Joined {new Date(user.createdAt).toLocaleDateString()}
+                      Joined {new Date(user.entry_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      user.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.status || 'active'}
                     </span>
                   </div>
                 </div>

@@ -62,10 +62,17 @@ const AdminDashboard = () => {
   // API base URL
   const API_BASE_URL = "http://localhost:3000/api";
 
-  // Fetch all data on component mount
+  // Fetch all data on component mount and set up polling
   useEffect(() => {
     console.log("🚀 AdminDashboard mounted, fetching data...");
     fetchAllData();
+
+    // Set up polling for new bookings every 30 seconds
+    const pollInterval = setInterval(() => {
+      fetchAllData();
+    }, 30000);
+
+    return () => clearInterval(pollInterval);
   }, []);
 
   // Also add a manual refresh button for debugging
@@ -78,6 +85,14 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       console.log("🔄 Fetching admin dashboard data...");
+
+      // Get auth token
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No auth token found!");
+        navigate("/login");
+        return;
+      }
 
       // Fetch trips
       const tripsRes = await axios.get(`${API_BASE_URL}/trips`).catch((err) => {
@@ -112,7 +127,11 @@ const AdminDashboard = () => {
 
       // Fetch users
       const usersRes = await axios
-        .get(`${API_BASE_URL}/auth/users`)
+        .get(`${API_BASE_URL}/auth/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Using the same token we get for bookings
+          },
+        })
         .catch((err) => {
           console.error(
             "❌ Error fetching users:",
@@ -121,9 +140,13 @@ const AdminDashboard = () => {
           return { data: [] };
         });
 
-      // Fetch bookings
+      // Fetch bookings with authorization
       const bookingsRes = await axios
-        .get(`${API_BASE_URL}/bookings`)
+        .get(`${API_BASE_URL}/bookings`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .catch((err) => {
           console.error(
             "❌ Error fetching bookings:",
@@ -144,7 +167,7 @@ const AdminDashboard = () => {
       const tripsData = tripsRes.data?.data || tripsRes.data || [];
       const driversData = driversRes.data?.data || driversRes.data || [];
       const vehiclesData = vehiclesRes.data?.data || vehiclesRes.data || [];
-      const usersData = usersRes.data?.data || usersRes.data || [];
+      const usersData = usersRes.data?.users || []; // Changed this to match our backend response
       const bookingsData = bookingsRes.data?.data || bookingsRes.data || [];
 
       console.log("✅ Processed Data:", {

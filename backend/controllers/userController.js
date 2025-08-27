@@ -139,3 +139,102 @@ exports.login = async (req, res) => {
     }
   );
 };
+
+exports.getAllUsers = async (req, res) => {
+  const sql = `
+    SELECT 
+      u.id, 
+      u.name, 
+      u.email, 
+      u.login_type, 
+      u.status, 
+      u.image,
+      u.entry_date,
+      COUNT(b.id) as total_bookings,
+      MAX(b.booking_date) as last_activity
+    FROM users u
+    LEFT JOIN bookings b ON u.id = b.user_id
+    LEFT JOIN trips t ON b.trip_id = t.id
+    GROUP BY u.id, u.name, u.email, u.login_type, u.status, u.image, u.entry_date
+    ORDER BY u.entry_date DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching users",
+        error: err.message,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      users: results,
+    });
+  });
+};
+
+exports.updateUserStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!["active", "suspended"].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid status value",
+    });
+  }
+
+  db.query(
+    "UPDATE users SET status = ? WHERE id = ?",
+    [status, id],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: "Error updating user status",
+          error: err.message,
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `User status updated to ${status}`,
+      });
+    }
+  );
+};
+
+exports.deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  db.query("DELETE FROM users WHERE id = ?", [id], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error deleting user",
+        error: err.message,
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  });
+};
