@@ -118,8 +118,10 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
     toast.success("Logged out successfully!");
+    navigate("/login");
   };
 
   const handleLogin = () => {

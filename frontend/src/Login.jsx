@@ -24,16 +24,29 @@ const Login = () => {
         formData
       );
 
-      toast.success(res.data.message);
+      console.log("Login response:", res.data); // Debug log
 
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (res.data.success && res.data.token) {
+        // Save both user data and token
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("token", res.data.token);
 
-      if (res.data.user.login_type === "admin") {
-        window.location.href = "/admin-dashboard";
+        console.log("Saved token:", res.data.token); // Debug log
+        console.log("Saved user:", res.data.user); // Debug log
+
+        toast.success("Login successful!");
+
+        if (res.data.user.login_type === "admin") {
+          window.location.href = "/admin-dashboard";
+        } else {
+          window.location.href = "/";
+        }
       } else {
-        window.location.href = "/";
+        console.error("Login response missing token or success:", res.data);
+        toast.error("Login failed. Please try again.");
       }
     } catch (err) {
+      console.error("Login error:", err.response?.data);
       toast.error(
         err?.response?.data?.message || "Login failed. Please try again."
       );

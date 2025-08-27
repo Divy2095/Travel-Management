@@ -1,5 +1,6 @@
 const db = require("../database/db");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
   const { name, email, password, confirmPassword, login_type } = req.body;
@@ -44,8 +45,7 @@ exports.signup = async (req, res) => {
       )}&radius=50&backgroundColor=ffd5dc&fontSize=40`;
 
       console.log("🔍 Generated avatar URL:", image);
-      
-      
+
       const sql = `
         INSERT INTO users 
         (name, email, password, login_type, image, entry_by, entry_date) 
@@ -70,7 +70,7 @@ exports.signup = async (req, res) => {
               name: name,
               email: email,
               image: image,
-            }
+            },
           });
         }
       );
@@ -116,6 +116,13 @@ exports.login = async (req, res) => {
         });
       }
 
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: user.id },
+        process.env.JWT_SECRET || "your-secret-key",
+        { expiresIn: "24h" }
+      );
+
       return res.status(200).json({
         success: true,
         message: "Login Successful!",
@@ -127,6 +134,7 @@ exports.login = async (req, res) => {
           status: user.status,
           image: user.image,
         },
+        token: token,
       });
     }
   );

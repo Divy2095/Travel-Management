@@ -14,23 +14,65 @@ const UserTrips = () => {
 
   const fetchUserTrips = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) {
-        toast.error("Please login to view your trips");
+      let user = localStorage.getItem("user");
+      let token = localStorage.getItem("token");
+
+      // Debug logs
+      console.log("Stored user:", user);
+      console.log("Stored token:", token);
+
+      if (!token) {
+        // Try to get a new token by redirecting to login
+        console.error("No token found");
+        toast.error("Session expired. Please login again.");
         return;
       }
 
-      const response = await axios.get(
-        `http://localhost:3000/api/bookings/user/${user._id}`
-      );
+      try {
+        user = JSON.parse(user);
+      } catch (e) {
+        console.error("Error parsing user:", e);
+        return;
+      }
+
+      if (!user?.id) {
+        console.error("No valid user found");
+        return;
+      }
+
+      // Create axios instance with base URL and auth header
+      const axiosInstance = axios.create({
+        baseURL: "http://localhost:3000/api",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Making request with token:", token); // Debug log
+
+      const response = await axiosInstance.get(`/bookings/user/${user.id}`);
+
+      console.log("API Response:", response.data); // Debug log
+
       if (response.data.success) {
+        console.log("Trip data received:", response.data.data); // Debug log
         setTrips(response.data.data || []);
       } else {
-        toast.error(response.data.message || "Failed to fetch trips");
+        toast.error("Could not load your trips at the moment.");
       }
     } catch (error) {
       console.error("Error fetching user trips:", error);
-      toast.error("Failed to fetch trips. Please try again later.");
+
+      if (error.response?.status === 401) {
+        console.log(
+          "Token verification failed:",
+          localStorage.getItem("token")
+        );
+        toast.error("Your session has expired. Please log in again.");
+      } else {
+        toast.error("Unable to load trips. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
@@ -47,10 +89,10 @@ const UserTrips = () => {
   // Filter trips based on date
   const currentDate = new Date();
   const upcomingTrips = trips.filter(
-    (trip) => new Date(trip.tripDate) >= currentDate
+    (trip) => new Date(trip.trip_date) >= currentDate
   );
   const pastTrips = trips.filter(
-    (trip) => new Date(trip.tripDate) < currentDate
+    (trip) => new Date(trip.trip_date) < currentDate
   );
 
   if (loading) {
@@ -108,35 +150,32 @@ const UserTrips = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayTrips.map((trip) => (
             <div
-              key={trip._id}
+              key={trip.id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
               <img
-                src={
-                  trip.trip?.images?.[0] ||
-                  "https://via.placeholder.com/400x200"
-                }
-                alt={trip.trip?.name}
+                src={trip.trip_image || "https://via.placeholder.com/400x200"}
+                alt={trip.trip_title}
                 className="w-full h-48 object-cover"
               />
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {trip.trip?.name || "Trip Name Not Available"}
+                  {trip.trip_title || "Trip Name Not Available"}
                 </h3>
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-600">
                     <FaCalendarAlt className="mr-2" />
-                    <span>{formatDate(trip.tripDate)}</span>
+                    <span>{formatDate(trip.trip_date)}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
                     <FaMapMarkerAlt className="mr-2" />
                     <span>
-                      {trip.trip?.destination || "Destination Not Available"}
+                      {trip.trip_title || "Destination Not Available"}
                     </span>
                   </div>
                   <div className="flex items-center text-gray-600">
                     <FaUsers className="mr-2" />
-                    <span>{trip.numberOfPeople} People</span>
+                    <span>{trip.participants} People</span>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100">
