@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { FaCalendarAlt, FaMapMarkerAlt, FaUsers } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaReceipt } from "react-icons/fa";
 
 const UserTrips = () => {
+  const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -179,7 +181,7 @@ const UserTrips = () => {
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-600">Status</span>
                     <span
                       className={`px-2 py-1 rounded-full text-sm ${
@@ -194,6 +196,12 @@ const UserTrips = () => {
                         trip.status.slice(1)}
                     </span>
                   </div>
+                  <button
+                    onClick={() => navigate(`/receipt/${trip.id}`)}
+                    className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FaReceipt /> View Receipt
+                  </button>
                 </div>
               </div>
             </div>

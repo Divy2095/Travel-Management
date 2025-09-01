@@ -9,8 +9,10 @@ const BookingSuccess = () => {
   // If no booking data, show a generic success message
   const bookingData = state || {};
 
-  const handlePrint = () => {
-    window.print();
+  const handleViewReceipt = () => {
+    if (bookingData.bookingId) {
+      navigate(`/receipt/${bookingData.bookingId}`);
+    }
   };
 
   const handleEmail = () => {
@@ -118,10 +120,10 @@ const BookingSuccess = () => {
 
           <div className="border-t pt-6 mt-6 flex flex-wrap gap-4 justify-center">
             <button
-              onClick={handlePrint}
+              onClick={handleViewReceipt}
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
-              <FaPrint /> Print Receipt
+              <FaPrint /> View Receipt
             </button>
             <button
               onClick={handleEmail}

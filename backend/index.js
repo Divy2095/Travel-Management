@@ -9,6 +9,7 @@ const driverRoutes = require("./routes/drivers");
 const tripRoutes = require("./routes/trips");
 const bookingRoutes = require("./routes/bookings");
 const moneyRoutes = require("./routes/moneyRoutes");
+const receiptRoutes = require("./routes/receiptRoutes");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/drivers", driverRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/driver-money", moneyRoutes);
+app.use("/api/receipts", receiptRoutes);
 
 // Debug: list all registered routes
 app.get("/_debug/routes", (req, res) => {

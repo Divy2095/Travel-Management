@@ -11,6 +11,7 @@ import BookingForm from "./BookingForm.jsx";
 import BookingSuccess from "./BookingSuccess.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ReceiptVoucher from "./components/ReceiptVoucher";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -23,6 +24,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/booking/:tripId" element={<BookingForm />} />
         <Route path="/booking-success" element={<BookingSuccess />} />
+        <Route path="/receipt/:id" element={<ReceiptVoucher />} />
       </Routes>
       <ToastContainer position="top-center" autoClose={3000} />
     </BrowserRouter>
