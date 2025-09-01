@@ -12,13 +12,13 @@ const ReceiptVoucher = () => {
   // Helper function to safely format dates
   const formatDate = (dateString) => {
     try {
-      if (!dateString) return 'N/A';
+      if (!dateString) return "N/A";
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Invalid Date';
-      return format(date, 'PPP');
+      if (isNaN(date.getTime())) return "Invalid Date";
+      return format(date, "PPP");
     } catch (err) {
-      console.error('Date formatting error:', err);
-      return 'Invalid Date';
+      console.error("Date formatting error:", err);
+      return "Invalid Date";
     }
   };
 
@@ -26,9 +26,12 @@ const ReceiptVoucher = () => {
     const fetchReceipt = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`http://localhost:3000/api/receipts/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          `http://localhost:3000/api/receipts/${id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setReceipt(response.data.data);
         setLoading(false);
       } catch (err) {
@@ -69,10 +72,7 @@ const ReceiptVoucher = () => {
           <h2 className="text-lg font-semibold mb-2">Booking Details</h2>
           <div className="text-gray-700">
             <p>Booking ID: {receipt.bookingDetails.bookingId}</p>
-            <p>
-              Date:{" "}
-              {formatDate(receipt.bookingDetails.bookingDate)}
-            </p>
+            <p>Date: {formatDate(receipt.bookingDetails.bookingDate)}</p>
             <p>Status: {receipt.bookingDetails.status}</p>
           </div>
         </div>
@@ -82,9 +82,7 @@ const ReceiptVoucher = () => {
         <h2 className="text-lg font-semibold mb-2">Trip Details</h2>
         <div className="text-gray-700">
           <p>Trip: {receipt.bookingDetails.tripTitle}</p>
-          <p>
-            Date: {formatDate(receipt.bookingDetails.tripDate)}
-          </p>
+          <p>Date: {formatDate(receipt.bookingDetails.tripDate)}</p>
           <p>Number of Participants: {receipt.bookingDetails.participants}</p>
         </div>
       </div>
@@ -94,10 +92,7 @@ const ReceiptVoucher = () => {
         <div className="text-gray-700">
           <p>Amount Paid: ₹{receipt.paymentDetails.amount}</p>
           <p>Payment ID: {receipt.paymentDetails.paymentId}</p>
-          <p>
-            Payment Date:{" "}
-            {formatDate(receipt.paymentDetails.paymentDate)}
-          </p>
+          <p>Payment Date: {formatDate(receipt.paymentDetails.paymentDate)}</p>
         </div>
       </div>
 

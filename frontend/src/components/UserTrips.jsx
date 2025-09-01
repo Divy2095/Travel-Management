@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaReceipt } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaReceipt,
+} from "react-icons/fa";
 
 const UserTrips = () => {
   const navigate = useNavigate();
