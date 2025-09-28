@@ -49,7 +49,7 @@ CREATE TABLE `bookings` (
   KEY `idx_bookings_booking_date` (`booking_date`),
   CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`trip_id`) REFERENCES `trips` (`id`) ON DELETE CASCADE,
   CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -59,10 +59,9 @@ CREATE TABLE `bookings` (
 LOCK TABLES `bookings` WRITE;
 /*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
 INSERT INTO `bookings` VALUES
-(1,10,7,'Ash','ash1234@gmail.com','8200544242','Divy','7854693587',1,NULL,1200.00,'2025-08-03 09:29:12','confirmed',NULL,NULL,'2025-08-03 09:29:12','2025-08-03 09:29:12','54806271'),
-(2,10,4,'Max','max1234@gmail.com','9998390232','Ryan','8349254890',1,NULL,1200.00,'2025-08-03 09:39:22','confirmed',NULL,NULL,'2025-08-03 09:39:22','2025-08-03 09:39:22','ek1wdj11'),
-(3,10,8,'Meet','meet1234@gmail.com','8200544343','Dev','8567498857',1,NULL,1200.00,'2025-08-04 04:08:38','confirmed',NULL,NULL,'2025-08-04 04:08:38','2025-08-04 04:08:38','fkz751h0'),
-(4,10,9,'Dishant','dishant1234@gmail.com','7990311379','Divy','8200544242',1,NULL,1200.00,'2025-08-04 04:34:20','confirmed',NULL,NULL,'2025-08-04 04:34:20','2025-08-04 04:34:20','rqsn7tzz');
+(5,11,9,'Dishant','dishant1234@gmail.com','8265478524','Divy','8200544242',1,NULL,1800.00,'2025-08-20 13:08:45','confirmed',NULL,NULL,'2025-08-20 13:08:45','2025-08-20 13:08:45','9efbbdj4'),
+(6,11,9,'Dishant','dishant1234@gmail.com','8974568825','Divy','8200544242',1,NULL,1800.00,'2025-08-27 03:52:19','confirmed',NULL,NULL,'2025-08-27 03:52:19','2025-08-27 03:52:19','pgv2nch9'),
+(7,12,9,'Kaushal','kaushal1234@gmail.com','9979009525','Divy','8200544242',1,'AC Bus.',1800.00,'2025-09-23 05:14:04','confirmed',NULL,NULL,'2025-09-23 05:14:04','2025-09-23 05:14:04','69q691ev');
 /*!40000 ALTER TABLE `bookings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -97,6 +96,45 @@ LOCK TABLES `cities` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `driver_money`
+--
+
+DROP TABLE IF EXISTS `driver_money`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `driver_money` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `driver_id` int NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `transaction_type` enum('credit','debit') NOT NULL,
+  `description` text NOT NULL,
+  `trip_id` int DEFAULT NULL,
+  `transaction_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `entry_by` varchar(100) DEFAULT NULL,
+  `update_by` varchar(100) DEFAULT NULL,
+  `entry_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `driver_id` (`driver_id`),
+  KEY `trip_id` (`trip_id`),
+  CONSTRAINT `driver_money_ibfk_1` FOREIGN KEY (`driver_id`) REFERENCES `drivers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `driver_money_ibfk_2` FOREIGN KEY (`trip_id`) REFERENCES `trips` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `driver_money`
+--
+
+LOCK TABLES `driver_money` WRITE;
+/*!40000 ALTER TABLE `driver_money` DISABLE KEYS */;
+INSERT INTO `driver_money` VALUES
+(6,2,4000.00,'credit','Dwarka',NULL,'2025-08-28 11:49:16','admin',NULL,'2025-08-28 11:49:16','2025-08-28 11:49:16'),
+(7,2,2000.00,'debit','Car Accident ',NULL,'2025-08-28 11:49:39','admin',NULL,'2025-08-28 11:49:39','2025-08-28 11:49:39');
+/*!40000 ALTER TABLE `driver_money` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `drivers`
 --
 
@@ -111,7 +149,7 @@ CREATE TABLE `drivers` (
   `license_number` varchar(50) NOT NULL,
   `license_expiry` date NOT NULL,
   `address` text,
-  `status` enum('active','inactive') DEFAULT 'active',
+  `status` enum('available','unavailable','on_trip','offline') NOT NULL DEFAULT 'offline',
   `assigned_vehicle_id` int DEFAULT NULL,
   `joined_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `profile_photo` text,
@@ -133,8 +171,7 @@ CREATE TABLE `drivers` (
 LOCK TABLES `drivers` WRITE;
 /*!40000 ALTER TABLE `drivers` DISABLE KEYS */;
 INSERT INTO `drivers` VALUES
-(1,'Mohan','mohan1234@gmail.com','8204578892','GJ-05-2025-0123456','2025-07-17','Near Madhapar chwok Rajkot','active',2,'2025-07-14 11:38:00','',4.0,'admin',NULL,'2025-07-14 11:38:00','2025-07-14 11:38:00'),
-(2,'Suresh','suresh1234@gmail.com','9816547820','GJ-05-2025-0123414','2028-09-12','Somewhere in Rajkot, Gujarat','active',2,'2025-07-22 16:29:08','',4.0,'admin',NULL,'2025-07-22 16:29:08','2025-07-22 16:29:08');
+(2,'Suresh','suresh1234@gmail.com','9816547820','GJ-05-2025-0123414','2028-09-11','Somewhere in Rajkot, Gujarat','on_trip',2,'2025-07-22 16:29:08',NULL,4.0,'admin',NULL,'2025-07-22 16:29:08','2025-09-28 06:33:16');
 /*!40000 ALTER TABLE `drivers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -192,10 +229,14 @@ CREATE TABLE `trips` (
   `update_by` varchar(100) DEFAULT NULL,
   `entry_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `update_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `driver_id` int DEFAULT NULL,
+  `driver_status` enum('assigned','free') DEFAULT 'free',
   PRIMARY KEY (`id`),
   KEY `location_id` (`location_id`),
+  KEY `fk_driver_id` (`driver_id`),
+  CONSTRAINT `fk_driver_id` FOREIGN KEY (`driver_id`) REFERENCES `drivers` (`id`) ON DELETE SET NULL,
   CONSTRAINT `trips_ibfk_1` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -205,12 +246,11 @@ CREATE TABLE `trips` (
 LOCK TABLES `trips` WRITE;
 /*!40000 ALTER TABLE `trips` DISABLE KEYS */;
 INSERT INTO `trips` VALUES
-(5,'Goa','A good place to visit','2025-07-27','https://res.cloudinary.com/dfrwvoowc/image/upload/v1753014065/trips/tmp-1-1753014057932_l9ohx9.jpg',NULL,3500.00,'3 days 2 nights',10,'active','admin',NULL,'2025-07-20 12:21:05','2025-07-20 12:21:05'),
-(6,'Goa ','Goa is a vibrant coastal state known for its stunning beaches, lively nightlife, rich Portuguese heritage, and laid-back vibe. It\'s the perfect mix of relaxation and adventure.','2025-07-27','https://res.cloudinary.com/dfrwvoowc/image/upload/v1753201236/trips/tmp-1-1753201230600_ozo2ko.jpg',NULL,3500.00,'3 days 2 nights',20,'active','admin',NULL,'2025-07-22 16:20:38','2025-07-22 16:20:38'),
-(7,'Goa','Goa is a vibrant coastal state known for its stunning beaches, lively nightlife, rich Portuguese heritage, and laid-back vibe. It\'s the perfect mix of relaxation and adventure.','2025-07-27','https://res.cloudinary.com/dfrwvoowc/image/upload/v1753201283/trips/tmp-2-1753201281096_c9pgm9.jpg',NULL,3500.00,'3 days 2 nights',10,'active','admin',NULL,'2025-07-22 16:21:24','2025-07-22 16:21:24'),
-(8,'Goa','Nice place to visit ','2025-08-03','https://res.cloudinary.com/dfrwvoowc/image/upload/v1753792647/trips/tmp-1-1753792643801_um1jvv.jpg',NULL,3500.00,'3 days 2 nights',20,'active','admin',NULL,'2025-07-29 12:37:27','2025-07-29 12:37:27'),
-(9,'Dwarka','Dwarka is a sacred coastal city in Gujarat, known as the legendary kingdom of Lord Krishna. It\'s one of the four Char Dham pilgrimage sites and holds deep spiritual and historical significance. The famous Dwarkadhish Temple attracts thousands of devotees, while nearby spots like Bet Dwarka add to its mythological charm. With its blend of ancient stories, temples, and serene sea views, Dwarka is a peaceful yet powerful place to visit.','2025-08-10','https://res.cloudinary.com/dfrwvoowc/image/upload/v1754208282/trips/tmp-1-1754208279459_fbxdqx.jpg',NULL,2000.00,'2 days 1 night',20,'active','admin',NULL,'2025-08-03 08:04:42','2025-08-03 08:04:42'),
-(10,'Dwarka','Sure! Here’s a short and sweet para for you:\r\n\r\n---\r\n\r\n**Dwarka** is a sacred coastal city in Gujarat, known as the legendary kingdom of Lord Krishna. It\'s one of the four Char Dham pilgrimage sites and holds deep spiritual and historical significance. The famous **Dwarkadhish Temple** attracts thousands of devotees, while nearby spots like **Bet Dwarka** add to its mythological charm. With its blend of ancient stories, temples, and serene sea views, Dwarka is a peaceful yet powerful place to visit.\r\n','2025-09-06','https://res.cloudinary.com/dfrwvoowc/image/upload/v1754212275/trips/tmp-1-1754212272246_g3kjzk.jpg',NULL,1200.00,'2 days 1 night',10,'active','admin',NULL,'2025-08-03 09:11:16','2025-08-03 09:11:16');
+(6,'Goa ','Goa is a vibrant coastal state known for its stunning beaches, lively nightlife, rich Portuguese heritage, and laid-back vibe. It\'s the perfect mix of relaxation and adventure.','2025-07-27','https://res.cloudinary.com/dfrwvoowc/image/upload/v1753201236/trips/tmp-1-1753201230600_ozo2ko.jpg',NULL,3500.00,'3 days 2 nights',20,'active','admin',NULL,'2025-07-22 16:20:38','2025-07-22 16:20:38',NULL,'free'),
+(8,'Goa','Nice place to visit ','2025-08-03','https://res.cloudinary.com/dfrwvoowc/image/upload/v1753792647/trips/tmp-1-1753792643801_um1jvv.jpg',NULL,3500.00,'3 days 2 nights',20,'active','admin',NULL,'2025-07-29 12:37:27','2025-07-29 12:37:27',NULL,'free'),
+(9,'Dwarka','Dwarka is a sacred coastal city in Gujarat, known as the legendary kingdom of Lord Krishna. It\'s one of the four Char Dham pilgrimage sites and holds deep spiritual and historical significance. The famous Dwarkadhish Temple attracts thousands of devotees, while nearby spots like Bet Dwarka add to its mythological charm. With its blend of ancient stories, temples, and serene sea views, Dwarka is a peaceful yet powerful place to visit.','2025-08-10','https://res.cloudinary.com/dfrwvoowc/image/upload/v1754208282/trips/tmp-1-1754208279459_fbxdqx.jpg',NULL,2000.00,'2 days 1 night',20,'active','admin',NULL,'2025-08-03 08:04:42','2025-08-03 08:04:42',NULL,'free'),
+(11,'Saputara','..............................................................................................................................','2025-08-31','https://res.cloudinary.com/dfrwvoowc/image/upload/v1755610066/trips/tmp-1-1755610056724_xgmxeq.jpg',NULL,1800.00,'3 days 2 nights',10,'active','admin',NULL,'2025-08-19 13:27:47','2025-08-20 10:57:46',NULL,'free'),
+(12,'Punjab','Explore Punjab, the land of vibrant culture, golden fields, and warm hospitality. Visit the serene Golden Temple in Amritsar, enjoy traditional Punjabi cuisine, and experience the energy of bhangra and local festivals. A perfect blend of history, spirituality, and lively traditions awaits you.','2025-10-02','https://res.cloudinary.com/dfrwvoowc/image/upload/v1758603922/trips/tmp-1-1758603918744_sfxwgy.jpg',NULL,1800.00,'3 days 2 nights',25,'active','1',NULL,'2025-09-23 05:05:24','2025-09-23 05:05:24',2,'free');
 /*!40000 ALTER TABLE `trips` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -249,7 +289,6 @@ INSERT INTO `users` VALUES
 (2,'Alex','alex1234@gmail.com','$2b$10$eb8yBxd8RFvpTGXfNew5/uLevzIVTAL1LNT6mcnceF65V4Q51Dudi','customer',NULL,'active','alex1234@gmail.com',NULL,'2025-07-10 04:49:38','2025-07-10 04:49:38'),
 (3,'Jhon','jhon1234@gmail.com','$2b$10$1B7f/6eFvY663sCzE7hyGOVGFkprDF6musqYo8Hsz/VW2GGGUhtti','customer',NULL,'active','jhon1234@gmail.com',NULL,'2025-07-10 04:53:45','2025-07-10 04:53:45'),
 (4,'Max','max1234@gmail.com','$2b$10$1bnRe1VMKsWF4DEblObG0.VI6/wInYmUEmct740kqpJ2ksbLcGHPW','customer','','active','max1234@gmail.com',NULL,'2025-07-10 05:22:38','2025-07-10 05:57:30'),
-(5,'Rohan','rohan1234@gmail.com','$2b$10$xxJwFUgaNt6sAs7WCbEaMO8hpt7QTHl2mUDHeJf1gfdSgVuKerTRO','customer','https://api.dicebear.com/9.x/initials/svg?seed=Rohan&radius=50&backgroundColor=ffd5dc&fontSize=40','active','rohan1234@gmail.com',NULL,'2025-07-20 10:05:47','2025-07-20 10:05:47'),
 (6,'Jay','jay1234@gmail.com','$2b$10$Vn8O33T8bYoTmYo7S9g7nuh0TMVtnwWybAISwbdZNRQb6q17BQ22G','customer','https://api.dicebear.com/9.x/initials/svg?seed=Jay&radius=50&backgroundColor=ffd5dc&fontSize=40','active','jay1234@gmail.com',NULL,'2025-07-20 10:08:11','2025-07-20 10:08:11'),
 (7,'Ash','ash1234@gmail.com','$2b$10$vWFQ0FlLzbBMXi050JXLAecb7oNjqb7t8m4wtwlunregD5HLgsI6i','customer','https://api.dicebear.com/9.x/initials/svg?seed=Ash&radius=50&backgroundColor=ffd5dc&fontSize=40','active','ash1234@gmail.com',NULL,'2025-07-29 12:36:08','2025-07-29 12:36:08'),
 (8,'Meet','meet1234@gmail.com','$2b$10$UwHq7HSzfAwXIFQAqX3heOpvDBNxMCf9y/VZTUj9axguraTX7yyR.','customer','https://api.dicebear.com/9.x/initials/svg?seed=Meet&radius=50&backgroundColor=ffd5dc&fontSize=40','active','meet1234@gmail.com',NULL,'2025-08-04 04:06:08','2025-08-04 04:06:08'),
@@ -287,7 +326,6 @@ CREATE TABLE `vehicles` (
 LOCK TABLES `vehicles` WRITE;
 /*!40000 ALTER TABLE `vehicles` DISABLE KEYS */;
 INSERT INTO `vehicles` VALUES
-(1,'7796','Car','Sedan',5,'available','admin',NULL,'2025-07-13 06:31:42','2025-07-13 06:31:42'),
 (2,'GJ 03 BA 9956','Bus','Mini-Bus',20,'available','admin',NULL,'2025-07-14 04:01:51','2025-07-14 04:01:51');
 /*!40000 ALTER TABLE `vehicles` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -305,4 +343,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-08-04 10:27:12
+-- Dump completed on 2025-09-28 17:06:12
