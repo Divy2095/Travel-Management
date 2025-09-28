@@ -171,6 +171,19 @@ exports.updateDriver = async (req, res) => {
       rating,
     } = req.body;
 
+    // Validate status if provided
+    if (status) {
+      const validStatuses = ["available", "unavailable", "on_trip", "offline"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Must be one of: ${validStatuses.join(
+            ", "
+          )}`,
+        });
+      }
+    }
+
     if (!name || !phone || !license_number || !license_expiry) {
       return res.status(400).json({
         success: false,

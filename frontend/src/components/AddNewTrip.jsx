@@ -15,6 +15,12 @@ const AddNewTrip = ({ refreshTrips }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [locations, setLocations] = useState([]);
+  //for driver set 
+  const [drivers, setDrivers] = useState([]);
+const [selectedDriver, setSelectedDriver] = useState("");
+//get user id
+const user = JSON.parse(localStorage.getItem("user"));
+const userId = user?.id; 
 
   // Fetch locations from backend
   useEffect(() => {
@@ -23,6 +29,16 @@ const AddNewTrip = ({ refreshTrips }) => {
         const res = await fetch("http://localhost:3000/api/trips/locations");
         const json = await res.json();
         console.log("Fetched Locations:", json);
+        const driverRes = await fetch("http://localhost:3000/api/drivers");
+      const driverJson = await driverRes.json();
+      console.log("fetched driver data:",driverJson);
+     if (Array.isArray(driverJson)) {
+  setDrivers(driverJson);
+} else if (driverJson.success && Array.isArray(driverJson.data)) {
+  setDrivers(driverJson.data);
+} else {
+  setDrivers([]);
+}
         if (json.success) {
           setLocations(json.data || []);
         } else {
@@ -53,7 +69,11 @@ const AddNewTrip = ({ refreshTrips }) => {
       if (!formData.get("max_participants")) {
         formData.append("max_participants", "10");
       }
-
+      
+      // ✅ Add selected driver here
+    formData.append("driver_id", selectedDriver);
+    console.log("form data of trip ", formData);
+    
       const response = await fetch("http://localhost:3000/api/trips", {
         method: "POST",
         body: formData,
@@ -252,6 +272,26 @@ const AddNewTrip = ({ refreshTrips }) => {
                     )}
                   </select>
                 </div>
+                {/* Driver Dropdown */}
+                <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Assign Driver
+  </label>
+  <select
+    value={selectedDriver}
+    onChange={(e) => setSelectedDriver(e.target.value)}
+    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+  >
+    <option value="">Select Driver</option>
+    {drivers
+      .filter((d) => d.status === "active")
+      .map((driver) => (
+        <option key={driver.id} value={driver.id}>
+          {driver.name} ({driver.phone})
+        </option>
+      ))}
+  </select>
+</div>
 
                 {/* Image Upload */}
                 <div>
@@ -268,7 +308,9 @@ const AddNewTrip = ({ refreshTrips }) => {
                 </div>
 
                 {/* Hidden field */}
-                <input type="hidden" name="entry_by" value="admin" />
+                {/* <input type="hidden" name="entry_by" value="admin" /> */}
+                 {/* Hidden field for entry_by */}
+                 <input type="hidden" name="entry_by" value={userId || ""} />
 
                 {/* Form Actions */}
                 <div className="flex gap-4 pt-6">

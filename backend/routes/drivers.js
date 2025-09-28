@@ -128,7 +128,7 @@ router.put("/:id", (req, res) => {
     profile_photo,
     rating,
   } = req.body;
-
+  console.log("req.body", req.body);
   // Basic validation
   if (!name || !phone || !license_number || !license_expiry) {
     return res.status(400).json({
@@ -138,23 +138,28 @@ router.put("/:id", (req, res) => {
   }
 
   // Handle optional fields
-  if (!status) status = "active";
+  // Validate status
+  const validStatuses = ["available", "unavailable", "on_trip", "offline"];
+  if (!status || !validStatuses.includes(status)) {
+    status = "offline";
+  }
   if (!rating) rating = null;
   if (!assigned_vehicle_id) assigned_vehicle_id = null;
+  if (!profile_photo) profile_photo = null;
 
   const driverData = {
     name,
     email,
     phone,
     license_number,
-    license_expiry,
+    license_expiry: new Date(license_expiry).toISOString().split("T")[0],
     address,
     status,
     assigned_vehicle_id,
     profile_photo,
-    rating,
+    rating: rating ? parseFloat(rating) : null,
   };
-
+  console.log("driverdata from be", driverData);
   // Update in database
   db.query(
     "UPDATE drivers SET ? WHERE id = ?",

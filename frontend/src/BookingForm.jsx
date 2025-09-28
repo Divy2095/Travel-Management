@@ -109,6 +109,7 @@ const BookingForm = () => {
     }
 
     const fetchData = async () => {
+      console.log("trip fetch from fe client");
       try {
         const [tokenRes, tripRes] = await Promise.all([
           fetch("http://localhost:3000/api/bookings/client_token"),

@@ -2,17 +2,18 @@ import React, { useState } from "react";
 import DriverMoney from "./DriverMoney";
 
 const EditDriverForm = ({ driver, onSave, onCancel }) => {
+  console.log("driver from editdriver form",driver);
   const [activeTab, setActiveTab] = useState("details");
   const [formData, setFormData] = useState({
     name: driver.name || "",
     email: driver.email || "",
     phone: driver.phone || "",
     license_number: driver.license_number || "",
-    experience_years: driver.experience_years || "",
+    license_expiry: driver.license_expiry,
     rating: driver.rating || "",
     status: driver.status || "active",
   });
-
+console.log(formData.status);
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -116,21 +117,25 @@ const EditDriverForm = ({ driver, onSave, onCancel }) => {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Experience (Years)
+                License Expiry
               </label>
               <input
-                type="number"
-                name="experience_years"
-                value={formData.experience_years}
+                type="text"
+                name="license_expiry"
+                value={formData.license_expiry}
                 onChange={handleChange}
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
+            
           </div>
+          
+
+            
+          
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -161,6 +166,7 @@ const EditDriverForm = ({ driver, onSave, onCancel }) => {
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
+                <option value="on_trip">OnTrip</option>
               </select>
             </div>
           </div>

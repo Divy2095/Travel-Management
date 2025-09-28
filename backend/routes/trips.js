@@ -37,10 +37,16 @@ router.get("/locations", (req, res) => {
 // Get all trips
 router.get("/", (req, res) => {
   const query = `
-    SELECT t.*, l.name as location_name 
-    FROM trips t
-    LEFT JOIN locations l ON t.location_id = l.id
-    ORDER BY t.id DESC
+    SELECT 
+    t.*, 
+    l.name AS location_name,
+    d.name AS driver_name,
+    d.phone AS driver_phone,
+    d.status AS driver_status
+  FROM trips t
+  LEFT JOIN locations l ON t.location_id = l.id
+  LEFT JOIN drivers d ON t.driver_id = d.id
+  ORDER BY t.id DESC
   `;
   db.query(query, (err, results) => {
     if (err) {
@@ -58,11 +64,17 @@ router.get("/", (req, res) => {
 router.get("/:id", (req, res) => {
   const { id } = req.params;
   const query = `
-    SELECT t.*, l.name as location_name 
-    FROM trips t
-    LEFT JOIN locations l ON t.location_id = l.id
-    WHERE t.id = ?
+      select  t.*, 
+    l.name AS location_name,
+    d.name AS driver_name,
+    d.phone AS driver_phone,
+    d.status AS driver_status
+  FROM trips t
+  LEFT JOIN locations l ON t.location_id = l.id
+  LEFT JOIN drivers d ON t.driver_id = d.id
+  WHERE t.id = ?
   `;
+  console.log("query bbe fetch trip",query);
   db.query(query, [id], (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -95,6 +107,7 @@ router.post("/", async (req, res) => {
     max_participants,
     status,
     entry_by,
+    driver_id,
   } = req.body;
 
   // Validate required fields
@@ -141,7 +154,7 @@ router.post("/", async (req, res) => {
       error: err.message,
     });
   }
-
+console.log("logged in user",req.user?.id);
   // Prepare trip data
   const tripData = {
     title,
@@ -153,7 +166,8 @@ router.post("/", async (req, res) => {
     duration: duration || null,
     max_participants: max_participants || 10,
     status: status || "active",
-    entry_by: entry_by || "admin",
+    entry_by:  entry_by ? entry_by : req.user?.id || 1,
+    driver_id:driver_id,
   };
 
   // Insert into database
@@ -166,6 +180,19 @@ router.post("/", async (req, res) => {
         error: err.sqlMessage || err.message,
       });
     }
+
+     const tripId = result.insertId;
+     //update driver status 
+     if (driver_id) {
+      db.query("UPDATE drivers SET status = 'on_trip' WHERE id = ?", [driver_id], (err2) => {
+          if (err2) {console.error("Error updating driver status:", err2);
+             return res.status(500).json({
+          success: false,
+          message: "Trip created, but failed to update driver status",
+          tripId,})
+          }
+      })
+     }
 
     return res.status(201).json({
       success: true,
@@ -188,6 +215,7 @@ router.put("/:id", async (req, res) => {
     duration,
     max_participants,
     status,
+    driver_id, // Make sure driver_id is passed in req.body if needed
   } = req.body;
 
   // Validate required fields
@@ -224,6 +252,7 @@ router.put("/:id", async (req, res) => {
     duration: duration || null,
     max_participants: max_participants || 10,
     status: status || "active",
+    driver_id: driver_id || null,
   };
 
   // Add image only if a new one was uploaded
@@ -231,7 +260,7 @@ router.put("/:id", async (req, res) => {
     tripData.image = imageUrl;
   }
 
-  // Update in database
+  // Update trip in database
   db.query("UPDATE trips SET ? WHERE id = ?", [tripData, id], (err, result) => {
     if (err) {
       return res.status(500).json({
@@ -248,6 +277,34 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    // Now update driver status based on trip date
+    const tripDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // compare only date part
+
+    if (driver_id) {
+      if (tripDate > today) {
+        // Future trip -> driver on_trip
+        db.query(
+          "UPDATE drivers SET status='on_trip' WHERE id = ?",
+          [driver_id],
+          (err) => {
+            if (err) console.error("Error updating driver status (on_trip):", err);
+          }
+        );
+      } else if (tripDate < today) {
+        // Past trip -> driver available, remove driver assignment
+        db.query("UPDATE drivers SET status='active' WHERE id = ?", [driver_id], (err) => {
+          if (err) console.error("Error updating driver status (active):", err);
+        });
+
+        // Remove driver from trip
+        db.query("UPDATE trips SET driver_id = NULL WHERE id = ?", [id], (err) => {
+          if (err) console.error("Error removing driver from past trip:", err);
+        });
+      }
+    }
+
     res.json({
       success: true,
       message: "Trip updated successfully",
@@ -255,31 +312,114 @@ router.put("/:id", async (req, res) => {
   });
 });
 
+
 // Delete a trip
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
 
-  db.query("DELETE FROM trips WHERE id = ?", [id], (err, result) => {
+  // First get the driver_id for this trip
+  db.query("SELECT driver_id FROM trips WHERE id = ?", [id], (err, results) => {
     if (err) {
       return res.status(500).json({
         success: false,
-        message: "Error deleting trip",
+        message: "Error fetching trip driver",
         error: err.message,
       });
     }
 
-    if (result.affectedRows === 0) {
+    if (results.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Trip not found",
       });
     }
 
-    res.json({
-      success: true,
-      message: "Trip deleted successfully",
+    const driverId = results[0].driver_id;
+
+    // Delete the trip
+    db.query("DELETE FROM trips WHERE id = ?", [id], (err2, result) => {
+      if (err2) {
+        return res.status(500).json({
+          success: false,
+          message: "Error deleting trip",
+          error: err2.message,
+        });
+      }
+
+      // Reset driver status if driver was assigned
+      if (driverId) {
+        db.query("UPDATE drivers SET status = 'active' WHERE id = ?", [driverId], (err3) => {
+          if (err3) {
+            return res.status(500).json({
+              success: false,
+              message: "Trip deleted but failed to reset driver status",
+              error: err3.message,
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: "Trip deleted and driver status reset to active",
+          });
+        });
+      } else {
+        return res.json({
+          success: true,
+          message: "Trip deleted successfully (no driver assigned)",
+        });
+      }
     });
   });
 });
+
+
+//to assign driver to trip
+// Assign driver to trip and update status
+router.post("/assign-driver", (req, res) => {
+  const { trip_id, driver_id } = req.body;
+
+  if (!trip_id || !driver_id)
+    return res.status(400).json({ success: false, message: "Trip ID and Driver ID required" });
+
+  // Check if driver exists and is active
+  db.query("SELECT status FROM drivers WHERE id = ?", [driver_id], (err, driver) => {
+    if (err) return res.status(500).json({ success: false, message: err.message });
+    if (!driver.length) return res.status(404).json({ success: false, message: "Driver not found" });
+    if (driver[0].status !== "active")
+      return res.status(400).json({ success: false, message: "Driver is not available" });
+
+    // Check if trip already has a driver
+    db.query("SELECT driver_id FROM trips WHERE id = ?", [trip_id], (err2, tripData) => {
+      if (err2) return res.status(500).json({ success: false, message: err2.message });
+
+      const oldDriverId = tripData[0].driver_id;
+
+      // Update trip with new driver
+      db.query(
+        "UPDATE trips SET driver_id = ?, trip_status = 'scheduled' WHERE id = ?",
+        [driver_id, trip_id],
+        (err3) => {
+          if (err3) return res.status(500).json({ success: false, message: err3.message });
+
+          // Update new driver status
+          db.query("UPDATE drivers SET status = 'on_trip' WHERE id = ?", [driver_id], (err4) => {
+            if (err4) return res.status(500).json({ success: false, message: err4.message });
+
+            // Reset old driver status if exists
+            if (oldDriverId) {
+              db.query("UPDATE drivers SET status = 'active' WHERE id = ?", [oldDriverId], (err5) => {
+                if (err5) console.error("Error resetting old driver status:", err5.message);
+              });
+            }
+
+            return res.json({ success: true, message: "Driver assigned to trip successfully" });
+          });
+        }
+      );
+    });
+  });
+});
+
+
 
 module.exports = router;

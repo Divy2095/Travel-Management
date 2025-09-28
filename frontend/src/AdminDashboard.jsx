@@ -120,19 +120,32 @@ const AdminDashboard = () => {
         });
 
       // Fetch users
-      const usersRes = await axios
-        .get(`${API_BASE_URL}/auth/users`, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Using the same token we get for bookings
-          },
-        })
-        .catch((err) => {
-          console.error(
-            "❌ Error fetching users:",
-            err.response?.data || err.message
-          );
-          return { data: [] };
-        });
+      // const usersRes = await axios
+      //   .get(`${API_BASE_URL}/auth/users`, {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`, // Using the same token we get for bookings
+      //     },
+      //   })
+      //   .catch((err) => {
+      //     console.error(
+      //       "❌ Error fetching users:",
+      //       err.response?.data || err.message
+      //     );
+      //     return { data: [] };
+      //   });
+          // Fetch recent users who booked trips by current admin
+        
+const usersRes = await axios.get(`${API_BASE_URL}/admin/recent-users`,{
+  headers: { Authorization: `Bearer ${token}` },
+}).catch((err) => {
+  console.error(
+    "❌ Error fetching recent users:",
+    err.response?.data || err.message
+  );
+  return { data: { users: [] } };
+});
+
+console.log("recent user",usersRes);
 
       // Fetch bookings with authorization
       const bookingsRes = await axios
@@ -237,7 +250,7 @@ const AdminDashboard = () => {
       console.log("With data:", updatedData);
 
       await axios.put(endpoint, updatedData);
-
+console.log("type",type);
       // Update local state
       switch (type) {
         case "trip":
@@ -248,6 +261,8 @@ const AdminDashboard = () => {
           );
           break;
         case "driver":
+          console.log("admindashboard put call driver",drivers);
+          console.log("admindashboard put call",updatedData);
           setDrivers(
             drivers.map((driver) =>
               driver.id === updatedData.id ? updatedData : driver
@@ -478,12 +493,13 @@ const AdminDashboard = () => {
 
   const renderEditForm = () => {
     const { type, data } = editModal;
-
+   console.log("drivers from admin",drivers);
     switch (type) {
       case "trip":
         return (
           <EditTripForm
             trip={data}
+              drivers={drivers} 
             onSave={handleSave}
             onCancel={() =>
               setEditModal({ isOpen: false, type: null, data: null })

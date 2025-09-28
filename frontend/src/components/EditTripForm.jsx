@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 
-const EditTripForm = ({ trip, onSave, onCancel }) => {
+const EditTripForm = ({ trip,drivers = [], onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     title: trip.title || "",
     description: trip.description || "",
@@ -8,14 +8,40 @@ const EditTripForm = ({ trip, onSave, onCancel }) => {
     max_participants: trip.max_participants || "",
     date: trip.date ? new Date(trip.date).toISOString().split("T")[0] : "",
     location_name: trip.location_name || "",
+    driver_id: trip.driver_id|| "",
   });
-
+//const [drivers, setDrivers] = useState([]);
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
+
+  console.log("drivers",drivers);
+const handleDriverChange = async (e) => {
+  const driver_id = e.target.value;
+  setFormData({ ...formData, driver_id });
+
+  if (driver_id) {
+    try {
+      const res = await fetch("http://localhost:3000/api/trips/assign-driver", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trip_id: trip.id, driver_id }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.message);
+        setFormData({ ...formData, driver_id: "" });
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign driver");
+      setFormData({ ...formData, driver_id: "" });
+    }
+  }
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -111,6 +137,37 @@ const EditTripForm = ({ trip, onSave, onCancel }) => {
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Assign Driver
+  </label>
+  <select
+  name="driver_id"
+  value={formData.driver_id || ""}
+  onChange={handleDriverChange}
+  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+>
+  {formData.driver_id && (
+    <option value={formData.driver_id}>
+      {drivers.find((d) => d.id === formData.driver_id)?.name ||
+        "Assigned Driver"}
+    </option>
+  )}
+  <option value="">Select Driver</option>
+  {drivers
+    .filter((d) => d.status === "active" && d.id !== formData.driver_id)
+    .map((driver) => (
+      <option key={driver.id} value={driver.id}>
+        {driver.name} ({driver.phone})
+      </option>
+    ))}
+</select>
+
+</div>
+
+
+
+
       </div>
 
       <div className="flex gap-3 pt-4">

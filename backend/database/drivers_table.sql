@@ -1,0 +1,1 @@
+ALTER TABLE drivers MODIFY COLUMN status ENUM('available', 'unavailable', 'on_trip', 'offline') NOT NULL DEFAULT 'offline';

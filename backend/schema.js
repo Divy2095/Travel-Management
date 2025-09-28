@@ -51,8 +51,28 @@ CREATE TABLE IF NOT EXISTS vehicles (
   update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )`;
 
-const drivers = `
-CREATE TABLE IF NOT EXISTS drivers (
+// const drivers = `
+// CREATE TABLE IF NOT EXISTS drivers (
+//   id INT AUTO_INCREMENT PRIMARY KEY,
+//   name VARCHAR(100) NOT NULL,
+//   email VARCHAR(100),
+//   phone VARCHAR(15) NOT NULL,
+//   license_number VARCHAR(50) NOT NULL,
+//   license_expiry DATE NOT NULL,
+//   address TEXT,
+//   status ENUM('active', 'inactive') DEFAULT 'active',
+//   assigned_vehicle_id INT,
+//   joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//   profile_photo TEXT,
+//   rating DECIMAL(2,1),
+//   entry_by VARCHAR(100),
+//   update_by VARCHAR(100),
+//   entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//   update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+//   FOREIGN KEY (assigned_vehicle_id) REFERENCES vehicles(id)
+// )`;
+
+const drivers=`CREATE TABLE IF NOT EXISTS drivers (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100),
@@ -60,7 +80,7 @@ CREATE TABLE IF NOT EXISTS drivers (
   license_number VARCHAR(50) NOT NULL,
   license_expiry DATE NOT NULL,
   address TEXT,
-  status ENUM('active', 'inactive') DEFAULT 'active',
+  status ENUM('active', 'inactive', 'on_trip') DEFAULT 'active',
   assigned_vehicle_id INT,
   joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   profile_photo TEXT,
@@ -98,8 +118,47 @@ CREATE TABLE IF NOT EXISTS locations (
   FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 )`;
 
-const trips = `
-CREATE TABLE IF NOT EXISTS trips (
+// const trips = `
+// CREATE TABLE IF NOT EXISTS trips (
+//   id INT AUTO_INCREMENT PRIMARY KEY,
+//   title VARCHAR(255) NOT NULL,
+//   description TEXT NOT NULL,
+//   date DATE NOT NULL,
+//   image VARCHAR(255) NOT NULL,
+//   location_id INT,
+//   price DECIMAL(10,2),
+//   duration VARCHAR(50),
+//   max_participants INT DEFAULT 10,
+//   status ENUM('active', 'inactive', 'completed') DEFAULT 'active',
+//   entry_by VARCHAR(100),
+//   update_by VARCHAR(100),
+//   entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//   update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+//   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
+// )`;
+
+// const trips=`CREATE TABLE IF NOT EXISTS trips (
+//   id INT AUTO_INCREMENT PRIMARY KEY,
+//   title VARCHAR(255) NOT NULL,
+//   description TEXT NOT NULL,
+//   date DATE NOT NULL,
+//   image VARCHAR(255) NOT NULL,
+//   location_id INT,
+//   price DECIMAL(10,2),
+//   duration VARCHAR(50),
+//   max_participants INT DEFAULT 10,
+//   status ENUM('active', 'inactive', 'completed') DEFAULT 'active',
+//   trip_status ENUM('scheduled','ongoing','completed') DEFAULT 'scheduled',
+//   driver_id INT,
+//   entry_by VARCHAR(100),
+//   update_by VARCHAR(100),
+//   entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//   update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+//   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL,
+//   FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE SET NULL
+// )`;
+
+const trips =`CREATE TABLE IF NOT EXISTS trips (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
@@ -110,11 +169,16 @@ CREATE TABLE IF NOT EXISTS trips (
   duration VARCHAR(50),
   max_participants INT DEFAULT 10,
   status ENUM('active', 'inactive', 'completed') DEFAULT 'active',
-  entry_by VARCHAR(100),
-  update_by VARCHAR(100),
+  trip_status ENUM('scheduled','ongoing','completed') DEFAULT 'scheduled',
+  driver_id INT,
+  entry_by INT,   -- store user id who created trip
+  update_by INT,  -- store user id who last updated trip
   entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
+  FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL,
+  FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE SET NULL,
+  FOREIGN KEY (entry_by) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (update_by) REFERENCES users(id) ON DELETE SET NULL
 )`;
 
 const bookings = `

@@ -10,7 +10,14 @@ const tripRoutes = require("./routes/trips");
 const bookingRoutes = require("./routes/bookings");
 const moneyRoutes = require("./routes/moneyRoutes");
 const receiptRoutes = require("./routes/receiptRoutes");
+const updateDriverAvailability = require("./cronJobs");
 
+// Run immediately for testing
+updateDriverAvailability();
+
+// Schedule it daily at midnight
+const cron = require("node-cron");
+cron.schedule("0 0 * * *", updateDriverAvailability);
 const app = express();
 
 app.use(

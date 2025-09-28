@@ -277,12 +277,13 @@ const AdminDashboard = () => {
 
   const renderEditForm = () => {
     const { type, data } = editModal;
-
+console.log("drivers from dashboard",drivers);
     switch (type) {
       case "trip":
         return (
           <EditTripForm
             trip={data}
+             drivers={drivers} 
             onSave={handleSave}
             onCancel={() =>
               setEditModal({ isOpen: false, type: null, data: null })
